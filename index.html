@@ -794,6 +794,78 @@ img{max-width:100%;display:block;}
   .modal{border-radius:var(--r);}
   .modal-body{padding:14px 18px 20px;}
 }
+
+/* ══════════════════════════════════════════
+   MASTER PANEL
+══════════════════════════════════════════ */
+.master-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;flex-wrap:wrap;gap:12px;
+}
+.master-title{font-size:22px;font-weight:800;color:var(--tx);letter-spacing:-.03em;}
+.master-sub{font-size:13px;color:var(--tx2);margin-top:3px;}
+.master-stats-row{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));
+  gap:12px;margin-bottom:20px;
+}
+.master-stat-card{
+  background:var(--sur);border-radius:var(--r);padding:16px 18px;
+  border:1.5px solid var(--bd2);display:flex;align-items:center;gap:14px;
+  box-shadow:var(--sh);
+}
+.msc-ico{width:40px;height:40px;border-radius:var(--r2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.msc-blu{background:var(--acc-light);color:var(--acc);}
+.msc-grn{background:var(--ok-light);color:var(--ok);}
+.msc-ylw{background:var(--wn-light);color:var(--wn);}
+.msc-cyn{background:#F0F9FF;color:#0284C7;}
+[data-theme="dark"] .msc-cyn{background:rgba(2,132,199,.15);}
+.msc-val{font-size:26px;font-weight:800;color:var(--tx);line-height:1;letter-spacing:-.04em;}
+.msc-lbl{font-size:12px;color:var(--tx2);margin-top:3px;font-weight:500;}
+
+.master-tab-bar{
+  display:flex;gap:4px;border-bottom:1.5px solid var(--bd);
+  margin-bottom:20px;overflow-x:auto;
+}
+.master-tab{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 18px;font-size:13.5px;font-weight:600;
+  color:var(--tx2);background:transparent;border:none;
+  border-bottom:2.5px solid transparent;margin-bottom:-1.5px;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  border-radius:var(--r3) var(--r3) 0 0;
+}
+.master-tab:hover{color:var(--tx);background:var(--bg2);}
+.master-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.master-panel{display:none;}
+.master-panel.active{display:block;}
+
+.master-form-card{
+  background:var(--sur);border-radius:var(--r);
+  padding:22px 24px;border:1.5px solid var(--bd2);
+  margin-bottom:16px;box-shadow:var(--sh);
+}
+.mfc-title{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:18px;letter-spacing:-.02em;}
+.mf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.mf-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.master-table-wrap{background:var(--sur);border-radius:var(--r);border:1.5px solid var(--bd2);overflow:hidden;box-shadow:var(--sh);}
+
+/* Price list items */
+.price-row{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border-bottom:1.5px solid var(--bd);transition:background .12s;
+}
+.price-row:last-child{border-bottom:none;}
+.price-row:hover{background:var(--bg2);}
+.price-ico{font-size:26px;flex-shrink:0;}
+.price-info{flex:1;}
+.price-name{font-size:14px;font-weight:700;color:var(--tx);}
+.price-meta{font-size:12px;color:var(--tx2);margin-top:2px;}
+.price-inputs{display:flex;gap:7px;align-items:center;}
+
+@media(max-width:768px){
+  .mf-grid2,.mf-grid3{grid-template-columns:1fr;}
+  .master-stat-card{padding:14px;}
+}
 </style>
 
 <!-- ============================================================
@@ -1303,14 +1375,321 @@ img{max-width:100%;display:block;}
 
       <!-- ADMIN VIEW -->
       <div id="v-admin" class="hidden adminSec" id="adminSec">
-        <div class="sec-bar" style="margin-bottom:20px"><h2>Gestione Corsi</h2></div>
-        <div class="adm-stats" id="admStats"></div>
-        <div class="tab-bar">
-          <div class="tab active" onclick="swTab('tab-c','tabCourses')">Corsi</div>
-          <div class="tab" id="tab-lsns" onclick="swTab('tab-l','tabLessons')" style="display:none">Lezioni</div>
+
+        <!-- Master Header -->
+        <div class="master-hd">
+          <div>
+            <div class="master-title">Pannello Master</div>
+            <div class="master-sub">Gestisci corsi, lezioni, prezzi e utenti</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-p" onclick="openNewCourse()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuovo Corso
+            </button>
+          </div>
         </div>
-        <div class="tc active" id="tabCourses"><div id="admTB"></div></div>
-        <div class="tc" id="tabLessons"><div id="admLsns"></div></div>
+
+        <!-- Stats row -->
+        <div class="master-stats-row">
+          <div class="master-stat-card">
+            <div class="msc-ico msc-blu">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div>
+              <div class="msc-val" id="adm-stat-cor">0</div>
+              <div class="msc-lbl">Corsi totali</div>
+            </div>
+          </div>
+          <div class="master-stat-card">
+            <div class="msc-ico msc-grn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+              <div class="msc-val" id="adm-stat-stu">0</div>
+              <div class="msc-lbl">Studenti iscritti</div>
+            </div>
+          </div>
+          <div class="master-stat-card">
+            <div class="msc-ico msc-ylw">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div class="msc-val" id="adm-stat-rev">€0</div>
+              <div class="msc-lbl">Ricavi totali</div>
+            </div>
+          </div>
+          <div class="master-stat-card">
+            <div class="msc-ico msc-cyn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div>
+              <div class="msc-val" id="adm-stat-lsn">0</div>
+              <div class="msc-lbl">Lezioni create</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main tabs -->
+        <div class="master-tab-bar">
+          <button class="master-tab active" id="mtab-corsi" onclick="switchMasterTab('corsi')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Corsi
+          </button>
+          <button class="master-tab" id="mtab-lezioni" onclick="switchMasterTab('lezioni')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Lezioni
+          </button>
+          <button class="master-tab" id="mtab-prezzi" onclick="switchMasterTab('prezzi')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Prezzi
+          </button>
+          <button class="master-tab" id="mtab-utenti" onclick="switchMasterTab('utenti')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Utenti
+          </button>
+        </div>
+
+        <!-- TAB: CORSI -->
+        <div class="master-panel active" id="mpanel-corsi">
+          <!-- Form nuovo/modifica corso -->
+          <div class="master-form-card" id="courseFormCard" style="display:none">
+            <div class="mfc-title" id="admFT">Nuovo corso</div>
+            <div id="adm-alert"></div>
+            <input type="hidden" id="a-eid">
+            <div class="mf-grid3">
+              <div class="fg" style="grid-column:1/3">
+                <label>Titolo corso *</label>
+                <input type="text" class="fc" id="a-title" placeholder="es. PLC Base - Siemens S7-1200">
+              </div>
+              <div class="fg">
+                <label>Icona (emoji)</label>
+                <input type="text" class="fc" id="a-icon" placeholder="⚙" style="font-size:22px;text-align:center">
+              </div>
+            </div>
+            <div class="fg">
+              <label>Descrizione</label>
+              <textarea class="fc" id="a-desc" rows="2" placeholder="Breve descrizione del corso..."></textarea>
+            </div>
+            <div class="mf-grid3">
+              <div class="fg">
+                <label>Livello</label>
+                <select class="fc" id="a-level">
+                  <option value="base">Base</option>
+                  <option value="intermedio">Intermedio</option>
+                  <option value="avanzato">Avanzato</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Stato</label>
+                <select class="fc" id="a-stat">
+                  <option value="disponibile">Disponibile</option>
+                  <option value="in arrivo">In arrivo</option>
+                  <option value="bozza">Bozza</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Prezzo</label>
+                <div style="display:flex;gap:6px">
+                  <select class="fc" id="a-currency" style="width:80px;flex-shrink:0">
+                    <option value="EUR">€</option>
+                    <option value="USD">$</option>
+                    <option value="GBP">£</option>
+                  </select>
+                  <input type="number" class="fc" id="a-price" placeholder="0.00" min="0" step="0.01" style="flex:1">
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-p" onclick="saveCourse()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salva corso
+              </button>
+              <button class="btn btn-o" onclick="document.getElementById('courseFormCard').style.display='none'">Annulla</button>
+            </div>
+          </div>
+
+          <!-- Tabella corsi -->
+          <div class="master-table-wrap">
+            <div class="a-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Corso</th>
+                    <th>Livello</th>
+                    <th>Lezioni</th>
+                    <th>Prezzo</th>
+                    <th>Iscritti</th>
+                    <th>Stato</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="admTB"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: LEZIONI -->
+        <div class="master-panel" id="mpanel-lezioni">
+          <!-- Selettore corso -->
+          <div class="master-form-card" style="padding:16px 20px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div style="font-size:13.5px;font-weight:600;color:var(--tx2);white-space:nowrap">Corso selezionato:</div>
+              <select class="fc" id="lsnCourseSelect" onchange="selectLsnCourse(this.value)" style="flex:1;min-width:200px;max-width:360px"></select>
+              <button class="btn btn-p btn-sm" onclick="openLsnF(-1)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nuova lezione
+              </button>
+            </div>
+          </div>
+
+          <!-- Info corso corrente -->
+          <div class="lm-hd" id="lsnCourseHd" style="display:none">
+            <div id="lmIco" style="font-size:28px"></div>
+            <div>
+              <div style="font-weight:700;font-size:15px" id="lmTit"></div>
+              <div style="font-size:12px;color:var(--tx2)" id="lmCnt"></div>
+            </div>
+          </div>
+
+          <!-- Form lezione -->
+          <div id="lsnFWrap" style="display:none" class="master-form-card">
+            <div class="mfc-title" id="lsnFT">Nuova lezione</div>
+            <div id="lsn-alert"></div>
+            <input type="hidden" id="l-idx">
+            <div class="mf-grid2">
+              <div class="fg" style="grid-column:1/2">
+                <label>Titolo lezione *</label>
+                <input type="text" class="fc" id="l-title" placeholder="es. Introduzione ai PLC Siemens">
+              </div>
+              <div class="fg">
+                <label>Durata</label>
+                <input type="text" class="fc" id="l-dur" placeholder="es. 45 min">
+              </div>
+            </div>
+
+            <!-- Video -->
+            <div class="fg">
+              <label>Tipo video</label>
+              <select class="fc" id="l-vt" onchange="updVF()" style="max-width:200px">
+                <option value="upload">Upload MP4</option>
+                <option value="gdrive">Google Drive</option>
+                <option value="vimeo">Vimeo</option>
+              </select>
+            </div>
+            <div id="vf-upload" class="fg">
+              <label>URL video MP4</label>
+              <div class="upload-area" onclick="document.getElementById('l-file').click()">
+                <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+                <div class="t1" id="upFN">Clicca per caricare video MP4</div>
+                <div class="t2">oppure incolla URL qui sotto</div>
+              </div>
+              <input type="file" id="l-file" accept="video/*" style="display:none" onchange="handleVUpload(this)">
+              <input type="text" class="fc" id="l-vurl" placeholder="https://..." style="margin-top:6px">
+            </div>
+            <div id="vf-gdrive" class="fg" style="display:none">
+              <label>Link Google Drive</label>
+              <input type="text" class="fc" id="l-gdrive" placeholder="https://drive.google.com/file/d/...">
+            </div>
+            <div id="vf-vimeo" class="fg" style="display:none">
+              <label>Link Vimeo</label>
+              <input type="text" class="fc" id="l-vimeo" placeholder="https://vimeo.com/123456">
+            </div>
+
+            <!-- Note -->
+            <div class="fg">
+              <label>Note del docente</label>
+              <textarea class="fc" id="l-notes" rows="3" placeholder="Appunti o spiegazioni per questa lezione..."></textarea>
+            </div>
+
+            <!-- PDF materiali -->
+            <div class="fg">
+              <label>Materiali PDF</label>
+              <div id="l-pdfs"></div>
+              <button class="btn btn-o btn-sm" style="margin-top:7px" onclick="document.getElementById('l-pdfs').insertAdjacentHTML('beforeend',pdfRH())">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Aggiungi PDF
+              </button>
+            </div>
+
+            <!-- Quiz -->
+            <div class="fg">
+              <label>Quiz</label>
+              <div id="l-quiz"></div>
+              <button class="btn btn-o btn-sm" style="margin-top:7px" onclick="document.getElementById('l-quiz').insertAdjacentHTML('beforeend',qzRH(null))">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Aggiungi domanda
+              </button>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-p" onclick="saveLsn()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Salva lezione
+              </button>
+              <button class="btn btn-o" onclick="document.getElementById('lsnFWrap').style.display='none'">Annulla</button>
+            </div>
+          </div>
+
+          <!-- Lista lezioni -->
+          <div id="lsnListAdm"></div>
+        </div>
+
+        <!-- TAB: PREZZI -->
+        <div class="master-panel" id="mpanel-prezzi">
+          <div class="master-form-card">
+            <div class="mfc-title">Gestione prezzi corsi</div>
+            <p style="font-size:13.5px;color:var(--tx2);margin-bottom:20px;line-height:1.6">Imposta o modifica il prezzo di ogni corso. I corsi gratuiti hanno prezzo 0.</p>
+            <div id="priceList"></div>
+          </div>
+
+          <!-- Stripe config -->
+          <div class="master-form-card" style="margin-top:16px">
+            <div class="mfc-title">Configurazione Stripe</div>
+            <div id="stripe-status-banner" style="margin-bottom:16px"></div>
+            <div class="mf-grid2">
+              <div class="fg">
+                <label>Chiave pubblica Stripe (pk_...)</label>
+                <input type="text" class="fc" id="stripe-pk-inp" placeholder="pk_live_..." autocomplete="off">
+              </div>
+              <div class="fg">
+                <label>Webhook secret (opzionale)</label>
+                <input type="text" class="fc" id="stripe-wh-inp" placeholder="whsec_...">
+              </div>
+            </div>
+            <button class="btn btn-p" onclick="saveStripeConfig()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Salva configurazione
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB: UTENTI -->
+        <div class="master-panel" id="mpanel-utenti">
+          <div class="master-form-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div class="mfc-title" style="margin-bottom:0">Lista utenti</div>
+              <div style="font-size:13px;color:var(--tx2)" id="usersCount"></div>
+            </div>
+            <div class="a-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Utente</th>
+                    <th>Email</th>
+                    <th>Profilo</th>
+                    <th>Ruolo</th>
+                    <th>Data reg.</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody id="uTB"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- USERS VIEW -->
@@ -1574,7 +1953,7 @@ function showV(v){
     if(oc&&oc.indexOf("'"+v+"'")>=0)el.classList.add('active');
   });
   var tt=document.getElementById('tbTitle');if(tt)tt.textContent=VT[v]||v;
-  if(v==='dashboard')rdDash();if(v==='courses')rdCList();if(v==='admin')rdAdm();
+  if(v==='dashboard')rdDash();if(v==='courses')rdCList();if(v==='admin'){rdAdm();switchMasterTab('corsi');};
   if(v==='reviews')rdRevs();if(v==='users')rdUsers();
   if(v==='live')initChat();else{if(chatPoll){clearInterval(chatPoll);chatPoll=null;}}
   var mpt=document.getElementById('mobilePT');if(mpt)mpt.textContent=VT[v]||v;
@@ -1782,7 +2161,8 @@ function saveCourse(){
   }
 }
 function editC(id){
-  swAT('add',document.querySelectorAll('#v-admin .tab')[1]);
+  var fc=document.getElementById('courseFormCard');
+  if(fc){fc.style.display='block';setTimeout(function(){fc.scrollIntoView({behavior:'smooth',block:'start'});},50);}
   var local=gC()||[];var c=null;for(var i=0;i<local.length;i++){if(local[i].id===id){c=local[i];break;}}if(!c)return;
   var at=document.getElementById('a-title'),ad=document.getElementById('a-desc'),ai=document.getElementById('a-icon');
   var al=document.getElementById('a-level'),as=document.getElementById('a-stat'),ae=document.getElementById('a-eid'),aft=document.getElementById('admFT');
@@ -2031,21 +2411,185 @@ function logout(){
 // ============================================================
 
 // ── RENDER ADMIN ─────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// MASTER PANEL FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+function switchMasterTab(tab) {
+  // Deactivate all
+  ['corsi','lezioni','prezzi','utenti'].forEach(function(t) {
+    var btn = document.getElementById('mtab-'+t);
+    var panel = document.getElementById('mpanel-'+t);
+    if(btn) btn.classList.remove('active');
+    if(panel) panel.classList.remove('active');
+  });
+  // Activate selected
+  var activeBtn = document.getElementById('mtab-'+tab);
+  var activePanel = document.getElementById('mpanel-'+tab);
+  if(activeBtn) activeBtn.classList.add('active');
+  if(activePanel) activePanel.classList.add('active');
+
+  // Load data for tab
+  if(tab === 'lezioni') rdLsnCourseSelect();
+  if(tab === 'prezzi') rdPriceList();
+  if(tab === 'utenti') rdUsers();
+}
+
+function openNewCourse() {
+  switchMasterTab('corsi');
+  var fc = document.getElementById('courseFormCard');
+  if(fc) { fc.style.display='block'; fc.scrollIntoView({behavior:'smooth',block:'start'}); }
+  var ft = document.getElementById('admFT');
+  var ae = document.getElementById('a-eid');
+  var at = document.getElementById('a-title');
+  var ad = document.getElementById('a-desc');
+  var apr = document.getElementById('a-price');
+  if(ft) ft.textContent = 'Nuovo corso';
+  if(ae) ae.value = '';
+  if(at) at.value = '';
+  if(ad) ad.value = '';
+  if(apr) apr.value = '';
+}
+
+function rdLsnCourseSelect() {
+  var sel = document.getElementById('lsnCourseSelect');
+  if(!sel) return;
+  ldC(function(cs) {
+    var h = '<option value="">-- Seleziona un corso --</option>';
+    cs.forEach(function(c) {
+      var selected = (CLCA === c.id) ? ' selected' : '';
+      h += '<option value="'+c.id+'"'+selected+'>'+c.icon+' '+esc(c.title)+'</option>';
+    });
+    sel.innerHTML = h;
+    // If we have a current course, show its header and lessons
+    if(CLCA) {
+      var c = gbId(CLCA);
+      if(c) {
+        var hd = document.getElementById('lsnCourseHd');
+        var li = document.getElementById('lmIco');
+        var lt = document.getElementById('lmTit');
+        var lc = document.getElementById('lmCnt');
+        if(hd) hd.style.display='flex';
+        if(li) li.innerHTML = c.icon;
+        if(lt) lt.textContent = c.title;
+        if(lc) lc.textContent = (c.lessons?c.lessons.length:0)+' lezioni';
+        rdLsnList(c);
+      }
+    }
+  });
+}
+
+function selectLsnCourse(id) {
+  if(!id) {
+    var hd = document.getElementById('lsnCourseHd');
+    var lsa = document.getElementById('lsnListAdm');
+    var fw = document.getElementById('lsnFWrap');
+    if(hd) hd.style.display='none';
+    if(lsa) lsa.innerHTML='';
+    if(fw) fw.style.display='none';
+    CLCA = '';
+    return;
+  }
+  CLCA = id;
+  var c = gbId(id);
+  if(!c) return;
+  var hd = document.getElementById('lsnCourseHd');
+  var li = document.getElementById('lmIco');
+  var lt = document.getElementById('lmTit');
+  var lc = document.getElementById('lmCnt');
+  if(hd) hd.style.display='flex';
+  if(li) li.innerHTML = c.icon;
+  if(lt) lt.textContent = c.title;
+  if(lc) lc.textContent = (c.lessons?c.lessons.length:0)+' lezioni';
+  rdLsnList(c);
+}
+
+function rdPriceList() {
+  var cont = document.getElementById('priceList');
+  if(!cont) return;
+  ldC(function(cs) {
+    var h = '';
+    cs.forEach(function(c) {
+      var price = c.price ? parseFloat(c.price).toFixed(2) : '0.00';
+      var currency = c.currency || 'EUR';
+      h += '<div class="price-row">';
+      h += '<div class="price-ico">'+c.icon+'</div>';
+      h += '<div class="price-info"><div class="price-name">'+esc(c.title)+'</div>';
+      h += '<div class="price-meta">'+c.level+' &bull; '+(c.lessons?c.lessons.length:0)+' lezioni &bull; '+(c.enrollments||0)+' iscritti</div></div>';
+      h += '<div class="price-inputs">';
+      h += '<select class="fc" id="cur-'+c.id+'" style="width:72px;padding:7px 8px">';
+      h += '<option value="EUR"'+( currency==='EUR'?' selected':'')+'>EUR €</option>';
+      h += '<option value="USD"'+(currency==='USD'?' selected':'')+'>USD $</option>';
+      h += '<option value="GBP"'+(currency==='GBP'?' selected':'')+'>GBP £</option>';
+      h += '</select>';
+      h += '<input type="number" class="fc" id="price-'+c.id+'" value="'+price+'" min="0" step="0.01" style="width:110px;padding:7px 10px" placeholder="0.00">';
+      h += '<button class="btn btn-p btn-sm" onclick="savePrice(\'' + c.id + '\')">Salva</button>';
+      h += '</div></div>';
+    });
+    cont.innerHTML = h || '<div style="padding:20px;text-align:center;color:var(--tx2)">Nessun corso disponibile.</div>';
+  });
+  // Also show stripe status
+  rdStripeStatus();
+}
+
+function savePrice(id) {
+  var priceEl = document.getElementById('price-'+id);
+  var curEl = document.getElementById('cur-'+id);
+  if(!priceEl) return;
+  var price = priceEl.value.trim();
+  var currency = curEl ? curEl.value : 'EUR';
+  var local = gC()||[];
+  for(var i=0;i<local.length;i++) {
+    if(local[i].id===id) {
+      local[i].price = price;
+      local[i].currency = currency;
+      break;
+    }
+  }
+  sC(local); CC=null;
+  toast('Prezzo aggiornato!');
+}
+
+function rdStripeStatus() {
+  var banner = document.getElementById('stripe-status-banner');
+  var pkInp = document.getElementById('stripe-pk-inp');
+  if(!banner) return;
+  var key = localStorage.getItem('pva_stripe_pk')||'';
+  if(pkInp && !pkInp.value) pkInp.value = key;
+  if(key) {
+    banner.innerHTML = '<div class="alert alert-s" style="margin:0">✅ Stripe configurato — chiave attiva: '+key.substring(0,12)+'...</div>';
+  } else {
+    banner.innerHTML = '<div class="alert alert-i" style="margin:0">Configura la chiave pubblica Stripe per abilitare i pagamenti online.</div>';
+  }
+}
+
+function saveStripeConfig() {
+  var pk = document.getElementById('stripe-pk-inp');
+  if(!pk||!pk.value.trim()) { toast('Inserisci la chiave pk_...','e'); return; }
+  localStorage.setItem('pva_stripe_pk', pk.value.trim());
+  rdStripeStatus();
+  toast('Stripe configurato!');
+}
+
 function rdAdm(){
   ldC(function(cs){
     var tb=document.getElementById('admTB');if(!tb)return;
-    var totalRev=0, totalStudents=0;
+    var totalRev=0, totalStudents=0, totalLsn=0;
     cs.forEach(function(c){
       totalRev += (c.enrollments||0) * (parseFloat(c.price)||0);
       totalStudents += (c.enrollments||0);
+      totalLsn += (c.lessons?c.lessons.length:0);
     });
     // Update stats
     var se=document.getElementById('adm-stat-rev');
     var ss=document.getElementById('adm-stat-stu');
     var sc=document.getElementById('adm-stat-cor');
+    var sl=document.getElementById('adm-stat-lsn');
     if(se)se.textContent='€'+totalRev.toFixed(0);
     if(ss)ss.textContent=totalStudents;
     if(sc)sc.textContent=cs.length;
+    if(sl)sl.textContent=totalLsn;
 
     var h='';
     cs.forEach(function(c){
@@ -2123,7 +2667,8 @@ function saveCourse(){
 }
 
 function editC(id){
-  swAT('add',document.querySelectorAll('#v-admin .tab')[1]);
+  var fc=document.getElementById('courseFormCard');
+  if(fc){fc.style.display='block';setTimeout(function(){fc.scrollIntoView({behavior:'smooth',block:'start'});},50);}
   var local=gC()||[];var c=null;
   for(var i=0;i<local.length;i++){if(local[i].id===id){c=local[i];break;}}
   if(!c)return;
