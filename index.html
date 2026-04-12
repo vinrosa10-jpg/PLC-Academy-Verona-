@@ -3852,7 +3852,7 @@ function initLive() {
     _pbLivePoll++;
     if (_pbLivePoll >= 3 && PB) {
       _pbLivePoll = 0;
-      fetch(PB + '/api/collections/live_state/records?sort=-updated&perPage=1', {
+      fetch(PB + '/api/collections/live_state_/records?sort=-updated&perPage=1', {
         headers: PT ? { Authorization: PT } : {}
       }).then(function(r) { return r.json(); }).then(function(d) {
         if (d.items && d.items.length) {
