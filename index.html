@@ -1810,7 +1810,7 @@ img{max-width:100%;display:block;}
       </div>
 
       <!-- ADMIN VIEW -->
-      <div id="v-admin" class="hidden adminSec" id="adminSec">
+      <div id="v-admin" class="hidden">
 
         <!-- Master Header -->
         <div class="master-hd">
@@ -2377,8 +2377,13 @@ function enterApp(){
   var pi=document.getElementById('prof-ni');if(pi)pi.value=CU.name;
   var tn=document.getElementById('tbAvName');if(tn){tn.textContent=CU.name;}
   if(CU.role==='admin'){
-    var as=document.getElementById('adminSec'),na=document.getElementById('niAdmin'),nu=document.getElementById('niUsers'),tl=document.getElementById('tab-lsns'),n2=document.getElementById('niUsers2'),cb=document.getElementById('adminCfgBtn'),bna=document.getElementById('bn-admin');
-    if(as)as.classList.remove('hidden');if(na)na.classList.remove('hidden');if(nu)nu.classList.remove('hidden');if(tl)tl.classList.remove('hidden');if(n2)n2.classList.remove('hidden');if(cb)cb.classList.remove('hidden');if(bna)bna.classList.remove('hidden');
+    // Show admin navigation items (NOT the panel itself — showV handles that)
+    var na=document.getElementById('niAdmin'),nu=document.getElementById('niUsers'),
+        n2=document.getElementById('niUsers2'),cb=document.getElementById('adminCfgBtn'),
+        bna=document.getElementById('bn-admin');
+    if(na)na.classList.remove('hidden');if(nu)nu.classList.remove('hidden');
+    if(n2)n2.classList.remove('hidden');if(cb)cb.classList.remove('hidden');
+    if(bna)bna.classList.remove('hidden');
   }
   showV('dashboard');
 }
