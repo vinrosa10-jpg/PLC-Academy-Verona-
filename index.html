@@ -3809,15 +3809,17 @@ function setLiveChat(c) { localStorage.setItem('pva_live_chat', JSON.stringify(c
 
 // ── INIT LIVE VIEW ──────────────────────────────────────────
 function initLive() {
+  _initLiveBC(); // init cross-tab broadcast channel
   var state = getLiveState();
   var isMaster = CU && CU.role === 'admin';
 
-  // Show master panel only to admin
+  // Show master panel only to admin, student lobby always visible to students
   var mp = document.getElementById('live-master-panel');
   var sl = document.getElementById('live-student-lobby');
   if (mp) mp.classList[isMaster ? 'remove' : 'add']('hidden');
+  if (sl) sl.style.display = isMaster ? 'none' : 'block';
 
-  // Show/hide active banner for students
+  // Load sessions
   rdScheduledSessions();
   rdScheduledSessionsStudent();
 
@@ -3871,7 +3873,7 @@ function initLive() {
       updateViewersList();
       updateChatMessages();
     }
-  }, 2000);
+  }, 1000);
 }
 
 function startLiveNow() {
