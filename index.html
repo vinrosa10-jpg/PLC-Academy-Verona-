@@ -866,6 +866,183 @@ img{max-width:100%;display:block;}
   .mf-grid2,.mf-grid3{grid-template-columns:1fr;}
   .master-stat-card{padding:14px;}
 }
+
+/* ══════════════════════════════════════════
+   LIVE SYSTEM
+══════════════════════════════════════════ */
+.btn-live{
+  background:linear-gradient(135deg,#EF4444,#DC2626);
+  color:#fff!important;border:none;padding:10px 20px;
+  border-radius:var(--r2);font-weight:700;font-size:13.5px;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.btn-live:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(239,68,68,.35);}
+
+/* Master panel in lobby */
+.live-master-panel{
+  background:var(--sur);border-radius:var(--r);
+  border:1.5px solid var(--bd2);box-shadow:var(--sh2);
+  margin-bottom:20px;overflow:hidden;
+}
+.lmp-hd{
+  background:linear-gradient(135deg,#0F1117,#1e2640);
+  padding:18px 24px;display:flex;align-items:center;justify-content:space-between;
+}
+.lmp-title{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.lmp-sub{font-size:12.5px;color:rgba(255,255,255,.4);margin-top:3px;}
+.lmp-section{padding:20px 24px;border-bottom:1.5px solid var(--bd);}
+.lmp-section:last-child{border-bottom:none;}
+.lmp-sec-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:13.5px;font-weight:700;color:var(--tx);
+  margin-bottom:14px;
+}
+.lmp-start-box{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+.lmp-sched-form{display:flex;flex-direction:column;gap:12px;}
+
+/* Scheduled sessions list (master) */
+.live-sess-item{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 16px;background:var(--bg2);border-radius:var(--r2);
+  border:1.5px solid var(--bd);margin-bottom:8px;
+}
+.live-sess-item:last-child{margin-bottom:0;}
+.lsi-dot{width:10px;height:10px;border-radius:50%;background:var(--acc);flex-shrink:0;}
+.lsi-body{flex:1;}
+.lsi-title{font-size:14px;font-weight:700;color:var(--tx);}
+.lsi-meta{font-size:12px;color:var(--tx2);margin-top:3px;}
+.lsi-link{font-size:12px;color:var(--acc);margin-top:2px;}
+
+/* Student lobby */
+.live-waiting-card{
+  background:var(--sur);border-radius:var(--r);
+  border:1.5px solid var(--bd2);padding:32px 28px;
+  text-align:center;max-width:560px;margin:0 auto 20px;
+  box-shadow:var(--sh);
+}
+.live-active-card{
+  text-align:left;display:flex;align-items:center;gap:18px;
+  background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(239,68,68,.02));
+  border-color:rgba(239,68,68,.25);flex-wrap:wrap;
+}
+.live-pulse-dot{
+  width:14px;height:14px;border-radius:50%;
+  background:#EF4444;flex-shrink:0;
+  box-shadow:0 0 0 4px rgba(239,68,68,.2);
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(239,68,68,.2);}50%{box-shadow:0 0 0 8px rgba(239,68,68,.06);}}
+.lwc-icon{font-size:44px;margin-bottom:14px;}
+.lwc-title{font-size:18px;font-weight:800;color:var(--tx);margin-bottom:8px;letter-spacing:-.02em;}
+.lwc-sub{font-size:14px;color:var(--tx2);line-height:1.65;}
+
+/* Scheduled sessions (student view) */
+.live-sched-student{max-width:560px;margin:0 auto;}
+.live-sched-hd{font-size:13px;font-weight:700;color:var(--tx2);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;font-family:var(--font-m);}
+.live-sched-item{
+  display:flex;align-items:center;gap:14px;
+  background:var(--sur);border:1.5px solid var(--bd2);
+  border-radius:var(--r2);padding:14px 16px;margin-bottom:10px;
+  box-shadow:var(--sh);
+}
+.lsci-date{
+  background:var(--acc-light);color:var(--acc);
+  border-radius:var(--r3);padding:6px 10px;text-align:center;
+  font-family:var(--font-m);flex-shrink:0;min-width:54px;
+}
+.lsci-day{font-size:18px;font-weight:800;line-height:1;}
+.lsci-month{font-size:10px;font-weight:600;text-transform:uppercase;}
+.lsci-info{flex:1;}
+.lsci-title{font-size:14px;font-weight:700;color:var(--tx);}
+.lsci-time{font-size:12px;color:var(--tx2);margin-top:3px;}
+
+/* ══ Live Room ══ */
+.live-room-wrap{
+  background:var(--bg);border-radius:var(--r);
+  overflow:hidden;border:1.5px solid var(--bd);
+}
+.lr2-topbar{
+  background:linear-gradient(135deg,#0F1117,#1a1f2e);
+  padding:10px 18px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.lr2-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-m);font-size:10.5px;font-weight:700;
+  color:rgba(255,255,255,.7);letter-spacing:.1em;
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);
+  padding:4px 9px;border-radius:50px;
+}
+.lr2-title{font-size:14px;font-weight:700;color:#fff;}
+.lr2-timer{font-family:var(--font-m);font-size:13px;color:rgba(255,255,255,.5);}
+.lr2-viewers{display:flex;align-items:center;gap:5px;font-size:12.5px;color:rgba(255,255,255,.4);}
+.lr2-right{display:flex;align-items:center;gap:8px;}
+
+/* Control buttons in room */
+.lr2-btn{
+  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;color:#fff;font-size:16px;
+}
+.lr2-btn-dark{background:rgba(255,255,255,.1);}
+.lr2-btn-dark:hover{background:rgba(255,255,255,.2);}
+.lr2-btn-red{background:#EF4444;}
+.lr2-btn-red:hover{background:#DC2626;}
+.lr2-btn-blue{background:#2563EB;}
+.lr2-btn-blue:hover{background:#1D4ED8;}
+
+/* Room body */
+.lr2-body{
+  display:grid;grid-template-columns:1fr 300px;
+  min-height:480px;
+}
+.lr2-main{padding:16px;}
+.lr2-video{
+  background:#09090B;border-radius:var(--r);
+  aspect-ratio:16/9;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.lr2-placeholder{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:24px;
+}
+.lr2-av{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,#2563EB,#1D4ED8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:800;color:#fff;font-family:var(--font-m);
+}
+.lr2-av-name{font-size:15px;font-weight:700;color:#fff;}
+.lr2-av-sub{font-size:12px;color:rgba(255,255,255,.3);}
+
+/* Sidebar */
+.lr2-sidebar{
+  border-left:1.5px solid var(--bd);
+  display:flex;flex-direction:column;
+}
+.lr2-tabs{
+  display:flex;border-bottom:1.5px solid var(--bd);flex-shrink:0;
+}
+.lr2-tab{
+  flex:1;padding:10px 8px;font-size:13px;font-weight:600;
+  color:var(--tx2);background:transparent;border:none;
+  border-bottom:2px solid transparent;margin-bottom:-1.5px;
+  cursor:pointer;transition:all .15s;
+}
+.lr2-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.lr2-cnt{
+  background:var(--acc);color:#fff;font-size:10px;
+  padding:1px 5px;border-radius:8px;margin-left:4px;
+}
+
+@media(max-width:768px){
+  .lr2-body{grid-template-columns:1fr;}
+  .lr2-sidebar{border-left:none;border-top:1.5px solid var(--bd);max-height:300px;}
+  .lmp-start-box{flex-direction:column;}
+  .live-active-card{flex-direction:column;text-align:center;}
+}
 </style>
 
 <!-- ============================================================
@@ -1315,44 +1492,186 @@ img{max-width:100%;display:block;}
 
       <!-- LIVE VIEW -->
       <div id="v-live" class="hidden">
-        <div class="sec-bar" style="margin-bottom:20px"><h2>Diretta Live</h2></div>
+
+        <!-- ══ LOBBY ══ -->
         <div id="live-lobby">
-          <div class="card" style="padding:28px;text-align:center;max-width:560px;margin:0 auto">
-            <div style="font-size:40px;margin-bottom:16px">📡</div>
-            <div style="font-size:19px;font-weight:800;color:var(--tx);margin-bottom:9px;letter-spacing:-.02em">Nessuna diretta attiva</div>
-            <div style="font-size:14px;color:var(--tx2);margin-bottom:22px;line-height:1.6">Le sessioni live vengono organizzate ogni settimana. Verrai notificato quando il docente avvia una diretta.</div>
-            <div id="masterLiveBtn"></div>
+          <!-- Master panel (solo admin) -->
+          <div class="live-master-panel hidden" id="live-master-panel">
+            <div class="lmp-hd">
+              <div>
+                <div class="lmp-title">Pannello Master — Dirette Live</div>
+                <div class="lmp-sub">Avvia una diretta istantanea o programma sessioni future</div>
+              </div>
+            </div>
+
+            <!-- Avvia diretta -->
+            <div class="lmp-section">
+              <div class="lmp-sec-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+                Avvia diretta adesso
+              </div>
+              <div class="lmp-start-box">
+                <div class="fg" style="flex:1;min-width:200px">
+                  <label>Titolo diretta</label>
+                  <input type="text" class="fc" id="live-quick-title" placeholder="es. PLC Base — Lezione pratica S7-1200">
+                </div>
+                <button class="btn btn-live" onclick="startLiveNow()" id="master-start-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                  Avvia diretta
+                </button>
+              </div>
+            </div>
+
+            <!-- Programma sessione -->
+            <div class="lmp-section">
+              <div class="lmp-sec-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Programma sessione futura
+              </div>
+              <div class="lmp-sched-form">
+                <div class="fg">
+                  <label>Titolo</label>
+                  <input type="text" class="fc" id="live-title" placeholder="Titolo della sessione">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="fg">
+                    <label>Data e ora</label>
+                    <input type="datetime-local" class="fc" id="live-dt">
+                  </div>
+                  <div class="fg">
+                    <label>Durata prevista</label>
+                    <select class="fc" id="live-dur">
+                      <option value="30 min">30 minuti</option>
+                      <option value="1h" selected>1 ora</option>
+                      <option value="1h 30min">1h 30min</option>
+                      <option value="2h">2 ore</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="fg">
+                  <label>Link esterno (YouTube Live, Zoom, Meet — opzionale)</label>
+                  <input type="url" class="fc" id="live-url" placeholder="https://youtube.com/live/...">
+                </div>
+                <div class="fg">
+                  <label>Descrizione</label>
+                  <textarea class="fc" id="live-desc" rows="2" placeholder="Di cosa parleremo..."></textarea>
+                </div>
+                <button class="btn btn-p btn-sm" onclick="saveLiveSess()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Programma sessione
+                </button>
+              </div>
+            </div>
+
+            <!-- Sessioni programmate -->
+            <div class="lmp-section">
+              <div class="lmp-sec-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                Sessioni programmate
+              </div>
+              <div id="scheduled-sessions-list"></div>
+            </div>
+          </div>
+
+          <!-- Studente: attesa diretta -->
+          <div id="live-student-lobby">
+            <div class="live-waiting-card" id="live-no-stream">
+              <div class="lwc-icon">📡</div>
+              <div class="lwc-title">Nessuna diretta attiva</div>
+              <div class="lwc-sub">Le sessioni live vengono organizzate ogni settimana.<br>Controlla il calendario qui sotto per le prossime date.</div>
+            </div>
+            <div class="live-waiting-card live-active-card hidden" id="live-active-banner">
+              <div class="live-pulse-dot"></div>
+              <div>
+                <div class="lwc-title" id="live-banner-title">Diretta in corso</div>
+                <div class="lwc-sub">Il docente sta trasmettendo adesso</div>
+              </div>
+              <button class="btn btn-live" onclick="joinLiveNow()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Entra nella diretta
+              </button>
+            </div>
+            <!-- Prossime sessioni (studente) -->
+            <div id="scheduled-sessions-student" class="live-sched-student"></div>
           </div>
         </div>
+
+        <!-- ══ LIVE ROOM ══ -->
         <div id="live-room-active" class="hidden">
-          <div class="live-room card" style="overflow:hidden">
-            <div class="lr-hd">
-              <div class="lr-stat"><span class="lr-dot"></span><span>LIVE</span></div>
-              <div style="display:flex;gap:8px" id="liveControls"></div>
-            </div>
-            <div class="lr-body">
-              <div class="lr-stream">
-                <div class="lr-video" id="liveVideoArea">
-                  <div class="lr-vbg" id="liveWaitMsg">
-                    <div class="pr-ring"></div>
-                    <div style="font-size:14px;color:var(--tx2);text-align:center">In attesa del docente...</div>
-                  </div>
-                  <video id="liveVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none"></video>
+          <div class="live-room-wrap">
+
+            <!-- Top bar della stanza -->
+            <div class="lr2-topbar">
+              <div class="lr2-left">
+                <div class="live-badge">
+                  <span class="lr-dot"></span>
+                  <span>LIVE</span>
                 </div>
-                <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap" id="studentLiveActions"></div>
-                <div style="margin-top:12px;font-size:12.5px;color:var(--tx2)" id="handRaisedList"></div>
+                <div class="lr2-title" id="live-session-title">Sessione in corso</div>
+                <div class="lr2-timer" id="live-timer">00:00</div>
+                <div class="lr2-viewers">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <span id="live-viewer-count">0</span>
+                </div>
               </div>
-              <div class="chat" style="border-radius:0">
-                <div class="chat-title">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  Chat Live
+              <div class="lr2-right" id="liveControls">
+                <!-- Injected by JS: master controls or student controls -->
+              </div>
+            </div>
+
+            <!-- Body: video + sidebar -->
+            <div class="lr2-body">
+
+              <!-- Video principale -->
+              <div class="lr2-main">
+                <div class="lr2-video" id="liveVideoArea">
+                  <!-- Master: webcam feed -->
+                  <video id="master-video-el" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:none;border-radius:var(--r)"></video>
+                  <!-- Placeholder quando cam è off -->
+                  <div class="lr2-placeholder" id="liveWaitMsg">
+                    <div class="lr2-av" id="master-av-big">M</div>
+                    <div class="lr2-av-name" id="master-name-tag">Docente</div>
+                    <div class="lr2-av-sub" id="master-cam-label">In attesa della webcam...</div>
+                  </div>
                 </div>
-                <div class="chat-msgs" id="chatMsgs"></div>
-                <div class="chat-in">
-                  <input type="text" class="chat-inp" id="chatInput" placeholder="Scrivi un messaggio..." onkeypress="if(event.key==='Enter')sendChat()">
-                  <button class="chat-send" onclick="sendChat()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+
+                <!-- Griglia thumbnail studenti con mano alzata -->
+                <div id="students-thumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+
+                <!-- Stato mano alzata (studente) -->
+                <div id="hand-status" style="margin-top:8px;font-size:13px;color:var(--wn);font-weight:600"></div>
+              </div>
+
+              <!-- Sidebar: tabs Chat / Partecipanti / Mani -->
+              <div class="lr2-sidebar">
+                <div class="lr2-tabs">
+                  <button class="lr2-tab active" id="lt-chat" onclick="switchLiveTab('chat')">Chat</button>
+                  <button class="lr2-tab" id="lt-people" onclick="switchLiveTab('people')">
+                    Partecipanti
+                    <span class="lr2-cnt" id="live-viewer-count2">0</span>
                   </button>
+                </div>
+
+                <!-- Chat panel -->
+                <div id="live-chat-panel" style="display:flex;flex-direction:column;flex:1;min-height:0">
+                  <div class="chat-msgs" id="chatMsgs" style="flex:1;overflow-y:auto;padding:12px"></div>
+                  <div class="chat-in">
+                    <input type="text" class="chat-inp" id="chatInput" placeholder="Scrivi un messaggio..." onkeypress="if(event.key==='Enter')sendChat()">
+                    <button class="chat-send" onclick="sendChat()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Partecipanti panel -->
+                <div id="live-people-panel" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:12px">
+                  <!-- Mani alzate (visibili solo al master) -->
+                  <div id="hands-raised-section" class="hidden">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--wn);text-transform:uppercase;margin-bottom:8px;font-family:var(--font-m)">✋ Mani alzate</div>
+                    <div id="hands-list" style="margin-bottom:14px"></div>
+                  </div>
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--tx2);text-transform:uppercase;margin-bottom:8px;font-family:var(--font-m)">Partecipanti</div>
+                  <div id="participants-list"></div>
                 </div>
               </div>
             </div>
@@ -3254,7 +3573,7 @@ if(!confirm('Eliminare questa sessione?'))return;
 var sessions=JSON.parse(localStorage.getItem('pva_live_sessions')||'[]');
 sessions.splice(idx,1);
 localStorage.setItem('pva_live_sessions',JSON.stringify(sessions));
-rdLive();toast('Sessione eliminata','w');
+rdScheduledSessions();rdScheduledSessionsStudent();toast('Sessione eliminata','w');
 }
 
 // ── USERS ─────────────────────────────────────────────────────
@@ -3317,46 +3636,116 @@ function setLiveChat(c) { localStorage.setItem('pva_live_chat', JSON.stringify(c
 
 // ── INIT LIVE VIEW ──────────────────────────────────────────
 function initLive() {
-var state = getLiveState();
+  var state = getLiveState();
+  var isMaster = CU && CU.role === 'admin';
 
-// Mostra bottone avvia solo al master
-var startBtn = document.getElementById('master-start-btn');
-if (startBtn) {
-if (CU && CU.role === 'admin') {
-startBtn.classList.remove('hidden');
+  // Show master panel only to admin
+  var mp = document.getElementById('live-master-panel');
+  var sl = document.getElementById('live-student-lobby');
+  if (mp) mp.classList[isMaster ? 'remove' : 'add']('hidden');
+
+  // Show/hide active banner for students
+  rdScheduledSessions();
+  rdScheduledSessionsStudent();
+
+  if (state && state.active) {
+    // Live is active
+    if (!isMaster) {
+      // Show active banner to student
+      var nb = document.getElementById('live-no-stream');
+      var ab = document.getElementById('live-active-banner');
+      var bt = document.getElementById('live-banner-title');
+      if (nb) nb.style.display = 'none';
+      if (ab) ab.classList.remove('hidden');
+      if (bt) bt.textContent = state.title || 'Diretta in corso';
+    } else {
+      // Master re-enters room automatically
+      enterLiveRoom(state);
+    }
+  } else {
+    var nb = document.getElementById('live-no-stream');
+    var ab = document.getElementById('live-active-banner');
+    if (nb) nb.style.display = '';
+    if (ab) ab.classList.add('hidden');
+  }
+
+  // Polling ogni 2s
+  if (livePollingInterval) clearInterval(livePollingInterval);
+  livePollingInterval = setInterval(function() {
+    var s = getLiveState();
+    var roomActive = document.getElementById('live-room-active');
+    if (!roomActive) return;
+    var inRoom = !roomActive.classList.contains('hidden');
+
+    if (s && s.active && !inRoom) {
+      if (isMaster) {
+        enterLiveRoom(s);
+      } else {
+        var nb = document.getElementById('live-no-stream');
+        var ab = document.getElementById('live-active-banner');
+        var bt = document.getElementById('live-banner-title');
+        if (nb) nb.style.display = 'none';
+        if (ab) ab.classList.remove('hidden');
+        if (bt) bt.textContent = s.title || 'Diretta in corso';
+      }
+    } else if ((!s || !s.active) && inRoom && !isMaster) {
+      exitLiveRoom();
+      toast('La diretta è terminata');
+    } else if (inRoom) {
+      updateViewersList();
+      updateChatMessages();
+    }
+  }, 2000);
 }
+
+function startLiveNow() {
+  if (!CU || CU.role !== 'admin') return;
+  var titleEl = document.getElementById('live-quick-title');
+  var title = titleEl ? titleEl.value.trim() : '';
+  if (!title) { toast('Inserisci il titolo della diretta', 'e'); return; }
+  var state = {
+    active: true, title: title,
+    startedAt: Date.now(), masterId: CU.id, masterName: CU.name
+  };
+  setLiveState(state); setLiveViewers([]); setLiveChat([]);
+  enterLiveRoom(state);
+  startMasterMedia();
+  toast('Diretta avviata! 🔴');
 }
 
-// Sessioni programmate
-rdScheduledSessions();
-
-if (state && state.active) {
-// C'è una diretta attiva → entra direttamente
-enterLiveRoom(state);
+function joinLiveNow() {
+  var state = getLiveState();
+  if (!state || !state.active) { toast('Nessuna diretta attiva', 'e'); return; }
+  enterLiveRoom(state);
 }
 
-// Polling ogni 2s per cambiamenti di stato
-if (livePollingInterval) clearInterval(livePollingInterval);
-livePollingInterval = setInterval(function() {
-var s = getLiveState();
-var roomActive = document.getElementById('live-room-active');
-if (!roomActive) return;
-var inRoom = !roomActive.classList.contains('hidden');
-
-if (s && s.active && !inRoom) {
-  // Diretta iniziata mentre ero in lobby
-  enterLiveRoom(s);
-} else if ((!s || !s.active) && inRoom && !(CU && CU.role === 'admin')) {
-  // Diretta terminata
-  exitLiveRoom();
-  toast('La diretta è terminata');
-} else if (inRoom) {
-  // Aggiorna viewers + chat
-  updateViewersList();
-  updateChatMessages();
-}
-
-}, 2000);
+function rdScheduledSessionsStudent() {
+  var cont = document.getElementById('scheduled-sessions-student');
+  if (!cont) return;
+  var sessions = JSON.parse(localStorage.getItem('pva_live_sessions') || '[]');
+  if (!sessions.length) { cont.innerHTML = ''; return; }
+  var upcoming = sessions.filter(function(s) {
+    return !s.dt || new Date(s.dt) > new Date(Date.now() - 3600000);
+  }).sort(function(a,b){ return new Date(a.dt||0) - new Date(b.dt||0); });
+  if (!upcoming.length) { cont.innerHTML = ''; return; }
+  var h = '<div class="live-sched-hd">Prossime sessioni</div>';
+  upcoming.forEach(function(s) {
+    var d = s.dt ? new Date(s.dt) : null;
+    var day = d ? d.getDate() : '--';
+    var mon = d ? d.toLocaleDateString('it', {month:'short'}).toUpperCase() : '';
+    var time = d ? d.toLocaleTimeString('it', {hour:'2-digit', minute:'2-digit'}) : '';
+    var dur = s.dur ? ' · ' + s.dur : '';
+    h += '<div class="live-sched-item">';
+    h += '<div class="lsci-date"><div class="lsci-day">'+day+'</div><div class="lsci-month">'+mon+'</div></div>';
+    h += '<div class="lsci-info">';
+    h += '<div class="lsci-title">'+esc(s.title)+'</div>';
+    h += '<div class="lsci-time">'+time+dur+'</div>';
+    if (s.desc) h += '<div style="font-size:12px;color:var(--tx2);margin-top:3px">'+esc(s.desc)+'</div>';
+    h += '</div>';
+    if (s.url) h += '<a href="'+esc(s.url)+'" target="_blank" class="btn btn-o btn-sm">Apri link</a>';
+    h += '</div>';
+  });
+  cont.innerHTML = h;
 }
 
 function rdScheduledSessions() {
@@ -3377,25 +3766,8 @@ cont.innerHTML = h;
 
 // ── MASTER: AVVIA DIRETTA ────────────────────────────────────
 function startLive() {
-if (!CU || CU.role !== 'admin') return;
-
-var title = prompt('Titolo della diretta:', 'Sessione PLC Live');
-if (!title) return;
-
-var state = {
-active: true,
-title: title,
-startedAt: Date.now(),
-masterId: CU.id,
-masterName: CU.name
-};
-setLiveState(state);
-setLiveViewers([]);
-setLiveChat([]);
-
-enterLiveRoom(state);
-startMasterMedia();
-toast('Diretta avviata!');
+  // Kept for backward compat — now uses startLiveNow()
+  startLiveNow();
 }
 
 function startMasterMedia() {
@@ -3418,38 +3790,44 @@ toast('Webcam non disponibile: ' + err.message, 'w');
 
 // ── ENTRA NELLA STANZA ───────────────────────────────────────
 function enterLiveRoom(state) {
-var lobby = document.getElementById('live-lobby');
-var room  = document.getElementById('live-room-active');
-if (lobby) lobby.style.display = 'none';
-if (room)  room.classList.remove('hidden');
+  var lobby = document.getElementById('live-lobby');
+  var room  = document.getElementById('live-room-active');
+  if (lobby) lobby.style.display = 'none';
+  if (room)  room.classList.remove('hidden');
 
-// Titolo
-var titleEl = document.getElementById('live-session-title');
-if (titleEl) titleEl.textContent = state.title || 'Sessione in corso';
+  var titleEl = document.getElementById('live-session-title');
+  if (titleEl) titleEl.textContent = state.title || 'Sessione in corso';
 
-// Controlla se master
-var isMaster = CU && CU.role === 'admin';
-var mc = document.getElementById('master-controls');
-var sc = document.getElementById('student-controls');
-if (mc) mc.classList[isMaster ? 'remove' : 'add']('hidden');
-if (sc) sc.style.display = isMaster ? 'none' : 'flex';
+  var isMaster = CU && CU.role === 'admin';
+  var av = document.getElementById('master-av-big');
+  var nt = document.getElementById('master-name-tag');
+  if (av && state.masterName) av.textContent = state.masterName.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+  if (nt && state.masterName) nt.textContent = state.masterName;
 
-// Avatar master
-var av = document.getElementById('master-av-big');
-var nt = document.getElementById('master-name-tag');
-if (av && state.masterName) av.textContent = state.masterName.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
-if (nt && state.masterName) nt.textContent = state.masterName;
+  // Render control buttons
+  var ctrl = document.getElementById('liveControls');
+  if (ctrl) {
+    if (isMaster) {
+      ctrl.innerHTML =
+        '<button id="btn-mic" class="lr2-btn lr2-btn-dark" onclick="toggleMic()" title="Microfono"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>' +
+        '<button id="btn-cam" class="lr2-btn lr2-btn-dark" onclick="toggleCam()" title="Webcam"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></button>' +
+        '<button id="btn-screen" class="lr2-btn lr2-btn-dark" onclick="shareScreen()" title="Condividi schermo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></button>' +
+        '<button class="btn btn-sm" style="background:#EF4444;color:#fff;border:none;padding:8px 14px;font-weight:700;border-radius:var(--r3)" onclick="endLive()">Termina</button>';
+    } else {
+      ctrl.innerHTML =
+        '<button id="btn-hand" class="lr2-btn lr2-btn-dark" onclick="toggleHand()" title="Alza la mano">✋</button>' +
+        '<button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);padding:8px 14px;font-size:13px;border-radius:var(--r3)" onclick="leaveLive()">Esci</button>';
+    }
+  }
 
-// Aggiungi viewer
-if (!isMaster) joinAsViewer();
+  if (!isMaster) joinAsViewer();
 
-// Timer
-liveStartTime = state.startedAt;
-if (liveTimerInterval) clearInterval(liveTimerInterval);
-liveTimerInterval = setInterval(updateTimer, 1000);
+  liveStartTime = state.startedAt;
+  if (liveTimerInterval) clearInterval(liveTimerInterval);
+  liveTimerInterval = setInterval(updateTimer, 1000);
 
-updateViewersList();
-updateChatMessages();
+  updateViewersList();
+  updateChatMessages();
 }
 
 function joinAsViewer() {
