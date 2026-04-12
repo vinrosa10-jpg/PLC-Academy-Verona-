@@ -2139,6 +2139,7 @@ function ldC(cb){
         if(d.items&&d.items.length){
           CC=d.items.map(function(r){
             return{id:r.id,title:r.title,icon:r.icon||'⚙',level:r.level||'base',desc:r.description||'',status:r.status||'disponibile',color:r.color||'bl',
+              price:r.price||'',currency:r.currency||'EUR',enrollments:r.enrollments||0,
               lessons:typeof r.lessons==='string'?JSON.parse(r.lessons||'[]'):r.lessons||[],
               materials:typeof r.materials==='string'?JSON.parse(r.materials||'[]'):r.materials||[],
               quiz:typeof r.quiz==='string'?JSON.parse(r.quiz||'[]'):r.quiz||[]};
@@ -2286,29 +2287,38 @@ function showV(v){
 function rdDash(){
   ldC(function(cs){
     var prog=gP(),tot=0,scores=[];
-    cs.forEach(function(c){var cp=prog[c.id]||{};tot+=(cp.done||[]).length;if(cp.score!==undefined)scores.push(cp.score);});
+    cs.forEach(function(c){if(!isEnrolled(c.id))return;var cp=prog[c.id]||{};tot+=(cp.done||[]).length;if(cp.score!==undefined)scores.push(cp.score);});
     var sd=document.getElementById('stD'),sq=document.getElementById('stQ');
     if(sd)sd.textContent=tot;
     if(sq)sq.textContent=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length)+'%':'-';
     var dl=document.getElementById('dashList');
     if(dl){
-      var h='';cs.forEach(function(c){
-        var cp=prog[c.id]||{done:[]};var d=(cp.done||[]).length,tl=c.lessons.length,pct=tl?Math.round(d/tl*100):0;
-        h+='<div class="card" style="padding:16px;margin-bottom:11px;cursor:pointer" onclick="openC(\''+c.id+'\')">';
-        h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div style="font-size:28px">'+c.icon+'</div>';
-        h+='<div style="flex:1"><div style="font-weight:700;font-size:14px">'+c.title+'</div><div style="font-size:12px;color:var(--mu)">'+d+'/'+tl+' lezioni</div></div>';
-        h+='<span class="bd '+(c.status==='disponibile'?'bd-g':'bd-y')+'">'+c.status+'</span></div>';
-        h+='<div class="pb-wrap"><div class="pb-fill" style="width:'+pct+'%"></div></div>';
-        h+='<div style="font-size:11px;color:var(--mu);margin-top:4px;text-align:right">'+pct+'% completato</div></div>';
-      });dl.innerHTML=h;
+      var mycs=cs.filter(function(c){return isEnrolled(c.id);});
+      var h='';
+      if(!mycs.length){
+        h='<div style="text-align:center;padding:24px;color:var(--tx2);font-size:14px">Nessun corso ancora. <a href="#" onclick="showV(\'courses\')" style="color:var(--acc);font-weight:600">Sfoglia i corsi →</a></div>';
+      }else{
+        mycs.forEach(function(c){
+          var cp=prog[c.id]||{done:[]};var d=(cp.done||[]).length,tl=c.lessons.length,pct=tl?Math.round(d/tl*100):0;
+          h+='<div class="card" style="padding:16px;margin-bottom:11px;cursor:pointer" onclick="openC(\''+c.id+'\')">';
+          h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div style="font-size:28px">'+c.icon+'</div>';
+          h+='<div style="flex:1"><div style="font-weight:700;font-size:14px">'+c.title+'</div><div style="font-size:12px;color:var(--tx2)">'+d+'/'+tl+' lezioni completate</div></div>';
+          h+='<span class="bd bd-g">'+pct+'%</span></div>';
+          h+='<div class="pb-wrap"><div class="pb-fill" style="width:'+pct+'%"></div></div></div>';
+        });
+      }
+      dl.innerHTML=h;
     }
     var pl=document.getElementById('progList');
     if(pl){
-      var h2='';cs.forEach(function(c){
+      var mycs2=cs.filter(function(c){return isEnrolled(c.id);});
+      var h2='';
+      if(!mycs2.length){h2='<div style="font-size:13px;color:var(--tx2)">Iscriviti a un corso per vedere i progressi.</div>';}
+      else{mycs2.forEach(function(c){
         var cp=prog[c.id]||{done:[]};var pct=c.lessons.length?Math.round((cp.done||[]).length/c.lessons.length*100):0;
-        h2+='<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px"><span>'+c.icon+' '+c.title.split('-')[0].trim()+'</span><span style="color:var(--p)">'+pct+'%</span></div>';
+        h2+='<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px"><span>'+c.icon+' '+c.title.split('-')[0].trim()+'</span><span style="color:var(--acc)">'+pct+'%</span></div>';
         h2+='<div class="pb-wrap"><div class="pb-fill" style="width:'+pct+'%"></div></div></div>';
-      });pl.innerHTML=h2;
+      });}pl.innerHTML=h2;
     }
   });
 }
@@ -2320,22 +2330,63 @@ function rdCList(){
   ldC(function(cs){
     var grid=document.getElementById('appCGrid');if(!grid)return;
     var prog=gP();var lc={base:'bd-b',intermedio:'bd-y',avanzato:'bd-r'};
-    var h='';cs.forEach(function(c){
-      var cp=prog[c.id]||{done:[]};var pct=c.lessons.length?Math.round((cp.done||[]).length/c.lessons.length*100):0;
-      h+='<div class="cc" onclick="openC(\''+c.id+'\')">';
-      h+='<div class="cc-hd '+c.color+'"><div class="cc-hd-grid"></div><div class="cc-icon">'+c.icon+'</div></div>';
-      h+='<div class="cc-body"><div class="cc-bds"><span class="bd '+(lc[c.level]||'bd-b')+'">'+c.level+'</span><span class="bd '+(c.status==='disponibile'?'bd-g':'bd-y')+'">'+c.status+'</span></div>';
-      h+='<div class="cc-title">'+c.title+'</div><div class="cc-desc">'+c.desc+'</div>';
-      h+='<div class="cc-meta"><span>'+c.lessons.length+' lezioni</span><span>'+(c.materials?c.materials.length:0)+' PDF</span><span>'+(c.quiz?c.quiz.length:0)+' quiz</span></div>';
-      h+='<div class="pb-wrap" style="margin-bottom:10px"><div class="pb-fill" style="width:'+pct+'%"></div></div>';
-      var priceTag='';var btnTxt=pct>0?'Continua &rarr;':'Inizia &rarr;';
-      if(c.price&&parseFloat(c.price)>0){
-        if(isEnrolled(c.id)){priceTag='<span class="bd bd-g">✅ Iscritto</span>';}
-        else{priceTag='<span class="bd bd-y" style="font-size:13px;font-weight:900">'+(c.currency||'EUR')+' '+parseFloat(c.price).toFixed(2)+'</span>';btnTxt='🔒 Acquista';}
-      }else{priceTag='<span class="bd bd-g">Gratuito</span>';}
-      h+='<div class="cc-ft">'+priceTag+'<button class="btn btn-p btn-sm">'+btnTxt+'</button></div></div></div>';
-    });grid.innerHTML=h;
+    // Separate: enrolled/free vs available to buy
+    var myC=[], buyC=[];
+    cs.forEach(function(c){
+      if(isEnrolled(c.id)) myC.push(c);
+      else buyC.push(c);
+    });
+    var h='';
+    // Section: my courses
+    if(myC.length){
+      h+='<div class="sec-bar" style="margin-bottom:14px"><h2>I miei corsi</h2></div>';
+      h+='<div class="cg" style="margin-bottom:28px">';
+      myC.forEach(function(c){
+        var cp=prog[c.id]||{done:[]};var pct=c.lessons.length?Math.round((cp.done||[]).length/c.lessons.length*100):0;
+        h+=courseCard(c,pct,lc,true);
+      });
+      h+='</div>';
+    }
+    // Section: available to buy
+    if(buyC.length){
+      h+='<div class="sec-bar" style="margin-bottom:14px"><h2>Corsi disponibili</h2><span style="font-size:13px;color:var(--tx2)">'+buyC.length+' corso'+(buyC.length>1?'i':'')+' acquistabile'+(buyC.length>1?'i':'')+'</span></div>';
+      h+='<div class="cg">';
+      buyC.forEach(function(c){
+        var cp=prog[c.id]||{done:[]};var pct=0;
+        h+=courseCard(c,pct,lc,false);
+      });
+      h+='</div>';
+    }
+    if(!cs.length) h='<div style="text-align:center;padding:40px;color:var(--tx2)">Nessun corso disponibile.</div>';
+    grid.innerHTML=h;
   });
+}
+
+function courseCard(c,pct,lc,enrolled){
+  var isFree=!c.price||parseFloat(c.price)<=0;
+  var priceTag='',btnTxt='',btnCls='btn btn-p btn-sm';
+  if(isFree||enrolled){
+    priceTag=enrolled?'<span class="bd bd-g">✅ Iscritto</span>':'<span class="bd bd-g">Gratuito</span>';
+    btnTxt=pct>0?'Continua &rarr;':'Inizia &rarr;';
+  }else{
+    priceTag='<span class="bd bd-y" style="font-size:13px;font-weight:800">'+(c.currency||'EUR')+' '+parseFloat(c.price).toFixed(2)+'</span>';
+    btnTxt='Acquista';
+    btnCls='btn btn-p btn-sm';
+  }
+  var h='<div class="cc" onclick="openC(\''+c.id+'\')">';
+  h+='<div class="cc-hd '+(c.color||'bl')+'"><div class="cc-hd-grid"></div><div class="cc-icon">'+c.icon+'</div></div>';
+  h+='<div class="cc-body">';
+  h+='<div class="cc-bds"><span class="bd '+(lc[c.level]||'bd-b')+'">'+c.level+'</span><span class="bd '+(c.status==='disponibile'?'bd-g':'bd-y')+'">'+c.status+'</span></div>';
+  h+='<div class="cc-title">'+c.title+'</div>';
+  h+='<div class="cc-desc">'+c.desc+'</div>';
+  h+='<div class="cc-meta"><span>'+c.lessons.length+' lezioni</span><span>'+(c.materials?c.materials.length:0)+' PDF</span><span>'+(c.quiz?c.quiz.length:0)+' quiz</span></div>';
+  if(enrolled&&c.lessons.length){
+    h+='<div class="pb-wrap" style="margin-bottom:10px"><div class="pb-fill" style="width:'+pct+'%"></div></div>';
+    h+='<div style="font-size:11px;color:var(--tx2);margin-bottom:8px;text-align:right">'+pct+'% completato</div>';
+  }
+  h+='<div class="cc-ft">'+priceTag+'<button class="'+btnCls+'">'+btnTxt+'</button></div>';
+  h+='</div></div>';
+  return h;
 }
 function filterC(q){document.querySelectorAll('#appCGrid .cc').forEach(function(c){c.style.display=c.textContent.toLowerCase().indexOf(q.toLowerCase())>=0?'':'none';});}
 function filterLvl(lvl,btn){
@@ -2460,25 +2511,7 @@ function swAT(t,btn){
   document.querySelectorAll('#v-admin .tc').forEach(function(el){el.classList.remove('active');});
   if(btn)btn.classList.add('active');var tc=document.getElementById('at-'+t);if(tc)tc.classList.add('active');
 }
-function saveCourse(){
-  var at=document.getElementById('a-title'),ad=document.getElementById('a-desc'),ai=document.getElementById('a-icon');
-  var al=document.getElementById('a-level'),as=document.getElementById('a-stat'),ae=document.getElementById('a-eid');
-  var aft=document.getElementById('admFT');
-  if(!at||!at.value.trim()){alrt('adm-alert','Inserisci il titolo','e');return;}
-  var eid=ae?ae.value.trim():'';
-  var cd={id:eid||('c'+Date.now()),title:at.value.trim(),icon:ai?ai.value.trim():'⚙',level:al?al.value:'base',desc:ad?ad.value.trim():'',status:as?as.value:'disponibile',color:'bl',lessons:[],materials:[],quiz:[]};
-  var local=gC()||[];
-  if(eid){for(var i=0;i<local.length;i++){if(local[i].id===eid){cd.lessons=local[i].lessons||[];cd.materials=local[i].materials||[];cd.quiz=local[i].quiz||[];local[i]=cd;break;}}}
-  else{local.push(cd);}
-  sC(local);CC=local;
-  alrt('adm-alert','Corso salvato!','s');
-  if(at)at.value='';if(ad)ad.value='';if(ae)ae.value='';if(aft)aft.textContent='Nuovo corso';
-  setTimeout(function(){openLsnM(cd.id);},800);
-  if(PB&&PT){
-    var pl={title:cd.title,description:cd.desc,icon:cd.icon,level:cd.level,status:cd.status,color:'bl',lessons:JSON.stringify(cd.lessons),materials:JSON.stringify(cd.materials),quiz:JSON.stringify(cd.quiz)};
-    fetch(PB+'/api/collections/courses/records'+(eid?'/'+eid:''),{method:eid?'PATCH':'POST',headers:{'Content-Type':'application/json','Authorization':PT},body:JSON.stringify(pl)}).catch(function(){});
-  }
-}
+// saveCourse defined below (full version with price support)
 function editC(id){
   var fc=document.getElementById('courseFormCard');
   if(fc){fc.style.display='block';setTimeout(function(){fc.scrollIntoView({behavior:'smooth',block:'start'});},50);}
@@ -2859,15 +2892,27 @@ function savePrice(id) {
   var price = priceEl.value.trim();
   var currency = curEl ? curEl.value : 'EUR';
   var local = gC()||[];
+  var found = false;
   for(var i=0;i<local.length;i++) {
     if(local[i].id===id) {
       local[i].price = price;
       local[i].currency = currency;
-      break;
+      found = true; break;
     }
   }
+  if(!found) { toast('Corso non trovato','e'); return; }
   sC(local); CC=null;
-  toast('Prezzo aggiornato!');
+  // Also sync to PB if configured
+  if(PB&&PT) {
+    fetch(PB+'/api/collections/courses/records/'+id,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','Authorization':PT},
+      body:JSON.stringify({price:price,currency:currency})
+    }).catch(function(){});
+  }
+  toast('Prezzo aggiornato! ✅');
+  // Refresh stats in master panel
+  rdAdm();
 }
 
 function rdStripeStatus() {
