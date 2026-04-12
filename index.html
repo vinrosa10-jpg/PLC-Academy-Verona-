@@ -2202,7 +2202,7 @@ img{max-width:100%;display:block;}
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
-var PB=localStorage.getItem('pva_pb')||'';
+var PB=localStorage.getItem('pva_pb')||'https://plc-academy-verona.onrender.com';
 var CU=null,PT=null,CC=null,CLC=null,CLCA='';
 var curL=0,curQ=0,qAns=[],selSt=0,chatPoll=null;
 var livePollingInterval=null,liveTimerInterval=null,liveStartTime=0,handRaised=false;
@@ -3844,9 +3844,34 @@ function initLive() {
     if (ab) ab.classList.add('hidden');
   }
 
-  // Polling ogni 2s
+  // Polling ogni 1s (localStorage + BroadcastChannel)
   if (livePollingInterval) clearInterval(livePollingInterval);
+  var _pbLivePoll = 0;
   livePollingInterval = setInterval(function() {
+    // Every 3s also check PocketBase (cross-device sync)
+    _pbLivePoll++;
+    if (_pbLivePoll >= 3 && PB) {
+      _pbLivePoll = 0;
+      fetch(PB + '/api/collections/live_state/records?sort=-updated&perPage=1', {
+        headers: PT ? { Authorization: PT } : {}
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.items && d.items.length) {
+          try {
+            var remoteState = JSON.parse(d.items[0].state || 'null');
+            var localState = getLiveState();
+            // If remote is newer/different, update local
+            if (remoteState && (!localState || !localState.active) && remoteState.active) {
+              localStorage.setItem('pva_live_state', d.items[0].state);
+              try { if (_liveBC) _liveBC.postMessage({type:'state', payload: remoteState}); } catch(e) {}
+            } else if (!remoteState || !remoteState.active) {
+              if (localState && localState.active && localState.masterId !== (CU && CU.id)) {
+                localStorage.setItem('pva_live_state', 'null');
+              }
+            }
+          } catch(e) {}
+        }
+      }).catch(function() {});
+    }
     var s = getLiveState();
     var isMaster = CU && CU.role === 'admin'; // rileggi ogni ciclo
     var roomActive = document.getElementById('live-room-active');
