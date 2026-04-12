@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+
+<html>
+<head><meta charset="UTF-8"><title>Test</title></head>
+<body>
+<button onclick="alert('FUNZIONA!')">Clicca qui</button>
+<button onclick="document.getElementById('msg').textContent='JS OK'">Test JS</button>
+<p id="msg">In attesa...</p>
+<script data-cfasync="false">
+console.log('Script caricato OK');
+document.getElementById('msg').textContent = 'Script eseguito OK';
+</script>
+</body>
+</html>
