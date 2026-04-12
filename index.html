@@ -3814,37 +3814,48 @@ function setLiveChat(c) { localStorage.setItem('pva_live_chat', JSON.stringify(c
 
 // ── INIT LIVE VIEW ──────────────────────────────────────────
 function initLive() {
-  _initLiveBC(); // init cross-tab broadcast channel
+  _initLiveBC();
   var state = getLiveState();
   var isMaster = CU && CU.role === 'admin';
 
-  // Show master panel only to admin, student lobby always visible to students
+  // ── Mostra/nascondi pannelli in base al ruolo ──
   var mp = document.getElementById('live-master-panel');
   var sl = document.getElementById('live-student-lobby');
-  if (mp) mp.classList[isMaster ? 'remove' : 'add']('hidden');
-  if (sl) sl.style.display = isMaster ? 'none' : 'block';
+  var ra = document.getElementById('live-room-active');
+  var lo = document.getElementById('live-lobby');
 
-  // Load sessions
+  // Reset: assicura che lobby sia visibile e room nascosta
+  if (ra) ra.classList.add('hidden');
+  if (lo) lo.style.display = '';
+
+  if (isMaster) {
+    // Admin: mostra pannello master, nascondi lobby studente
+    if (mp) { mp.classList.remove('hidden'); mp.style.display = ''; }
+    if (sl) sl.style.display = 'none';
+  } else {
+    // Studente: nascondi pannello master, mostra lobby studente
+    if (mp) mp.classList.add('hidden');
+    if (sl) { sl.style.display = 'block'; sl.style.visibility = 'visible'; }
+  }
+
+  // ── Carica sessioni programmate ──
   rdScheduledSessions();
   rdScheduledSessionsStudent();
 
+  // ── Gestisci stato diretta attiva ──
+  var nb = document.getElementById('live-no-stream');
+  var ab = document.getElementById('live-active-banner');
+  var bt = document.getElementById('live-banner-title');
+
   if (state && state.active) {
-    // Live is active
-    if (!isMaster) {
-      // Show active banner to student
-      var nb = document.getElementById('live-no-stream');
-      var ab = document.getElementById('live-active-banner');
-      var bt = document.getElementById('live-banner-title');
-      if (nb) nb.style.display = 'none';
-      if (ab) ab.classList.remove('hidden');
-      if (bt) bt.textContent = state.title || 'Diretta in corso';
-    } else {
-      // Master re-enters room automatically
+    if (isMaster) {
       enterLiveRoom(state);
+    } else {
+      if (nb) nb.style.display = 'none';
+      if (ab) { ab.classList.remove('hidden'); ab.style.display = ''; }
+      if (bt) bt.textContent = state.title || 'Diretta in corso';
     }
   } else {
-    var nb = document.getElementById('live-no-stream');
-    var ab = document.getElementById('live-active-banner');
     if (nb) nb.style.display = '';
     if (ab) ab.classList.add('hidden');
   }
