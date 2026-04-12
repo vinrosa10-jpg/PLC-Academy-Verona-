@@ -1214,62 +1214,129 @@ function switchTab(tab){
 }
 
 async function loginUser(){
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
+  const emailEl = document.getElementById('login-email');
+  const passEl  = document.getElementById('login-password');
   const alertId = 'modal-alert';
-  if(!email||!pass){ showAlert(alertId,'Compila tutti i campi','error'); return; }
+
+  const email = emailEl ? emailEl.value.trim() : '';
+  const pass  = passEl  ? passEl.value : '';
+
+  if(!email){ showAlert(alertId,'Inserisci la tua email','error'); return; }
+  if(!pass){  showAlert(alertId,'Inserisci la password','error'); return; }
+
   showAlert(alertId,'⏳ Accesso in corso...','info');
+
+  // Prova PocketBase
+  let pbSuccess = false;
   try {
-    const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
-    pbToken     = res.token;
-    currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role, profile:res.record.profile_type };
-    localStorage.setItem('pva_token', pbToken);
-    localStorage.setItem('pva_user',  JSON.stringify(currentUser));
-    closeModal();
-    enterApp();
+    const pbUrl = localStorage.getItem('pva_pb_url');
+    if(pbUrl && pbUrl.length > 10){
+      const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
+      pbToken     = res.token;
+      currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role||'student', profile:res.record.profile_type||'Studente' };
+      localStorage.setItem('pva_token', pbToken);
+      localStorage.setItem('pva_user',  JSON.stringify(currentUser));
+      pbSuccess = true;
+    }
   } catch(e){
-    // Fallback offline login
-    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
-    const u = offlineUsers.find(u=>u.email===email&&u.password===pass);
-    if(u){ currentUser=u; pbToken=null; closeModal(); enterApp(); showBanner('⚠️ Modalità offline — configura PocketBase URL'); }
-    else { showAlert(alertId,'Email o password errati','error'); }
+    console.log('PocketBase login fallito:', e.message);
   }
+
+  // Fallback locale
+  if(!pbSuccess){
+    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
+    // Controlla anche admin default
+    const adminUser = {id:'admin_local',name:'Admin Academy',email:'admin@plcveronaacademy.it',password:'Admin1234!',role:'admin',profile:'Admin'};
+    const allUsers  = [adminUser, ...offlineUsers];
+    const found = allUsers.find(u=>u.email===email && u.password===pass);
+    if(found){
+      currentUser = found; pbToken = null;
+      pbSuccess = true;
+    } else {
+      showAlert(alertId,'Email o password errati','error');
+      return;
+    }
+  }
+
+  if(emailEl) emailEl.value='';
+  if(passEl)  passEl.value='';
+  closeModal();
+  enterApp();
 }
 
 async function registerUser(src){
-  const name  = document.getElementById(src==='modal'?'modal-reg-name':'reg-name').value.trim();
-  const email = document.getElementById(src==='modal'?'modal-reg-email':'reg-email').value.trim();
-  const pass  = document.getElementById(src==='modal'?'modal-reg-password':'reg-password').value;
-  const prof  = document.getElementById(src==='modal'?'modal-reg-profile':'reg-profile').value;
-  const alertId = src==='modal'?'modal-alert':'landing-reg-alert';
-  if(!name||!email||!pass){ showAlert(alertId,'Compila tutti i campi','error'); return; }
-  if(pass.length<6){ showAlert(alertId,'Password minimo 6 caratteri','error'); return; }
-  showAlert(alertId,'⏳ Registrazione in corso...','info');
-  try {
-    await api('POST','collections/users/records',{
-      email, password:pass, passwordConfirm:pass,
-      full_name:name, role:'student', profile_type:prof||'Studente', emailVisibility:true
-    }, false);
-    // Auto login
-    const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
-    pbToken     = res.token;
-    currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role, profile:res.record.profile_type };
-    localStorage.setItem('pva_token', pbToken);
-    localStorage.setItem('pva_user',  JSON.stringify(currentUser));
-    if(src==='modal') closeModal();
-    enterApp();
-  } catch(e){
-    // Offline fallback
-    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
-    if(offlineUsers.find(u=>u.email===email)){ showAlert(alertId,'Email già registrata','error'); return; }
-    const u={id:'local_'+Date.now(),name,email,password:pass,role:'student',profile:prof||'Studente'};
-    offlineUsers.push(u);
-    localStorage.setItem('pva_offline_users',JSON.stringify(offlineUsers));
-    currentUser=u; pbToken=null;
-    if(src==='modal') closeModal();
-    enterApp();
-    showBanner('⚠️ Registrazione offline — configura PocketBase per sincronizzare');
+  const nameId  = src==='modal' ? 'modal-reg-name'     : 'reg-name';
+  const emailId = src==='modal' ? 'modal-reg-email'    : 'reg-email';
+  const passId  = src==='modal' ? 'modal-reg-password' : 'reg-password';
+  const profId  = src==='modal' ? 'modal-reg-profile'  : 'reg-profile';
+  const alertId = src==='modal' ? 'modal-alert'        : 'landing-reg-alert';
+
+  const nameEl  = document.getElementById(nameId);
+  const emailEl = document.getElementById(emailId);
+  const passEl  = document.getElementById(passId);
+  const profEl  = document.getElementById(profId);
+
+  if(!nameEl||!emailEl||!passEl){
+    showAlert(alertId,'Errore: campi non trovati. Ricarica la pagina.','error'); return;
   }
+
+  const name  = nameEl.value.trim();
+  const email = emailEl.value.trim();
+  const pass  = passEl.value;
+  const prof  = profEl ? profEl.value : 'Studente';
+
+  // Validazione
+  if(!name){ showAlert(alertId,'Inserisci il tuo nome','error'); nameEl.focus(); return; }
+  if(!email || !email.includes('@')){ showAlert(alertId,'Inserisci un'email valida','error'); emailEl.focus(); return; }
+  if(!pass || pass.length<6){ showAlert(alertId,'Password minimo 6 caratteri','error'); passEl.focus(); return; }
+
+  showAlert(alertId,'⏳ Registrazione in corso...','info');
+
+  // Prima prova con PocketBase
+  let pbSuccess = false;
+  try {
+    const pbUrl = localStorage.getItem('pva_pb_url');
+    if(pbUrl && pbUrl.length > 10){
+      await api('POST','collections/users/records',{
+        email, password:pass, passwordConfirm:pass,
+        full_name:name, role:'student', profile_type:prof||'Studente', emailVisibility:true
+      }, false);
+      const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
+      pbToken     = res.token;
+      currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role||'student', profile:res.record.profile_type||'Studente' };
+      localStorage.setItem('pva_token', pbToken);
+      localStorage.setItem('pva_user',  JSON.stringify(currentUser));
+      pbSuccess = true;
+    }
+  } catch(e){
+    console.log('PocketBase non disponibile, uso modalità locale:', e.message);
+  }
+
+  // Fallback locale (funziona sempre)
+  if(!pbSuccess){
+    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
+    if(offlineUsers.find(u=>u.email===email)){
+      showAlert(alertId,'Email già registrata. Prova ad accedere.','error'); return;
+    }
+    const newUser = {
+      id: 'local_'+Date.now(),
+      name, email, password: pass,
+      role: 'student',
+      profile: prof||'Studente',
+      date: new Date().toLocaleDateString('it-IT')
+    };
+    offlineUsers.push(newUser);
+    localStorage.setItem('pva_offline_users', JSON.stringify(offlineUsers));
+    currentUser = newUser;
+    pbToken = null;
+  }
+
+  // Svuota i campi
+  nameEl.value=''; emailEl.value=''; passEl.value=''; if(profEl) profEl.value='';
+
+  if(src==='modal') closeModal();
+  enterApp();
+  if(!pbSuccess) showBanner('✅ Account creato in locale — collega il backend per sincronizzare');
 }
 
 function logout(){
