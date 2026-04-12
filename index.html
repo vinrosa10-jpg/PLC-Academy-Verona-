@@ -1565,7 +1565,7 @@ img{max-width:100%;display:block;}
         <!-- ══ LOBBY ══ -->
         <div id="live-lobby">
           <!-- Master panel (solo admin) -->
-          <div class="live-master-panel hidden" id="live-master-panel">
+          <div class="live-master-panel" id="live-master-panel" style="display:none">
             <div class="lmp-hd">
               <div>
                 <div class="lmp-title">Pannello Master — Dirette Live</div>
@@ -2152,7 +2152,7 @@ img{max-width:100%;display:block;}
 <!-- TOAST -->
 <div class="toast-box" id="toastBox"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></s
 
 var PB=localStorage.getItem('pva_pb')||'https://plc-academy-verona.onrender.com';
 var CU=null,PT=null,CC=null,CLC=null,CLCA='';
@@ -3781,13 +3781,11 @@ function initLive() {
   if (lo) lo.style.display = '';
 
   if (isMaster) {
-    // Admin: forza visibilità pannello master
-    if (mp) { mp.classList.remove('hidden'); mp.style.cssText = 'display:block!important'; }
-    if (sl) { sl.style.cssText = 'display:none!important'; }
+    if (mp) { mp.style.display = 'block'; mp.classList.remove('hidden'); }
+    if (sl) { sl.style.display = 'none'; }
   } else {
-    // Studente: nascondi pannello master
-    if (mp) { mp.classList.add('hidden'); mp.style.cssText = 'display:none!important'; }
-    if (sl) { sl.style.cssText = 'display:block!important'; }
+    if (mp) { mp.style.display = 'none'; }
+    if (sl) { sl.style.display = 'block'; }
   }
 
   // ── Carica sessioni programmate ──
