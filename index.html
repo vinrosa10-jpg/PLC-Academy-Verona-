@@ -2205,7 +2205,7 @@ function ldC(cb){
   var loc=gC();if(loc&&loc.length){CC=loc;cb(CC);return;}
   if(PB&&PB.length>8){
     fetch(PB+'/api/collections/courses/records?perPage=50&sort=created',{headers:PT?{Authorization:PT}:{}})
-      .then(function(r){return r.json();}).then(function(d){
+      .then(function(r){if(!r.ok)throw new Error('404');return r.json();}).then(function(d){
         if(d.items&&d.items.length){
           CC=d.items.map(function(r){
             return{id:r.id,title:r.title,icon:r.icon||'⚙',level:r.level||'base',desc:r.description||'',status:r.status||'disponibile',color:r.color||'bl',
@@ -3744,25 +3744,58 @@ var camOn = true;
 var handRaised = false;
 var liveTabActive = 'chat';
 
-// ── STATO LIVE (condiviso via localStorage) ──────────────────
-// pva_live_state: { active, title, startedAt, masterId }
-// pva_live_viewers: [ { id, name, ini, handRaised, joinedAt } ]
-// pva_live_chat: [ { id, userId, name, ini, text, ts } ]
+// ── STATO LIVE (localStorage + BroadcastChannel + PocketBase) ──
+var _liveBC = null;
+
+function _initLiveBC() {
+  if (_liveBC) return;
+  try {
+    _liveBC = new BroadcastChannel('pva_live');
+    _liveBC.onmessage = function(e) {
+      if (!e.data || !e.data.type) return;
+      if (e.data.type === 'state')   localStorage.setItem('pva_live_state',   JSON.stringify(e.data.payload));
+      if (e.data.type === 'viewers') localStorage.setItem('pva_live_viewers', JSON.stringify(e.data.payload));
+      if (e.data.type === 'chat')    localStorage.setItem('pva_live_chat',    JSON.stringify(e.data.payload));
+    };
+  } catch(e) { _liveBC = null; }
+}
 
 function getLiveState() {
-try { return JSON.parse(localStorage.getItem('pva_live_state') || 'null'); } catch(e) { return null; }
+  try { return JSON.parse(localStorage.getItem('pva_live_state') || 'null'); } catch(e) { return null; }
 }
-function setLiveState(s) { localStorage.setItem('pva_live_state', s ? JSON.stringify(s) : 'null'); }
+function setLiveState(s) {
+  var val = s ? JSON.stringify(s) : 'null';
+  localStorage.setItem('pva_live_state', val);
+  try { if (_liveBC) _liveBC.postMessage({type:'state', payload:s}); } catch(e) {}
+  // Sync PocketBase (cross-device)
+  if (PB) {
+    var payload = {state: val, updated: Date.now()};
+    fetch(PB+'/api/collections/live_state_/records?filter=(id!="")', {headers:{'Content-Type':'application/json'}})
+      .then(function(r){return r.json();}).then(function(d){
+        if (d.items && d.items.length) {
+          fetch(PB+'/api/collections/live_state_/records/'+d.items[0].id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(){});
+        } else {
+          fetch(PB+'/api/collections/live_state_/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(function(){});
+        }
+      }).catch(function(){});
+  }
+}
 
 function getLiveViewers() {
-try { return JSON.parse(localStorage.getItem('pva_live_viewers') || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem('pva_live_viewers') || '[]'); } catch(e) { return []; }
 }
-function setLiveViewers(v) { localStorage.setItem('pva_live_viewers', JSON.stringify(v)); }
+function setLiveViewers(v) {
+  localStorage.setItem('pva_live_viewers', JSON.stringify(v));
+  try { if (_liveBC) _liveBC.postMessage({type:'viewers', payload:v}); } catch(e) {}
+}
 
 function getLiveChat() {
-try { return JSON.parse(localStorage.getItem('pva_live_chat') || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(localStorage.getItem('pva_live_chat') || '[]'); } catch(e) { return []; }
 }
-function setLiveChat(c) { localStorage.setItem('pva_live_chat', JSON.stringify(c)); }
+function setLiveChat(c) {
+  localStorage.setItem('pva_live_chat', JSON.stringify(c));
+  try { if (_liveBC) _liveBC.postMessage({type:'chat', payload:c}); } catch(e) {}
+}
 
 // ── INIT LIVE VIEW ──────────────────────────────────────────
 function initLive() {
