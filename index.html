@@ -2275,7 +2275,7 @@ function showV(v){
   var tt=document.getElementById('tbTitle');if(tt)tt.textContent=VT[v]||v;
   if(v==='dashboard')rdDash();if(v==='courses')rdCList();if(v==='admin'){rdAdm();switchMasterTab('corsi');};
   if(v==='reviews')rdRevs();if(v==='users')rdUsers();
-  if(v==='live')initChat();else{if(chatPoll){clearInterval(chatPoll);chatPoll=null;}}
+  if(v==='live'){initLive();}else{if(chatPoll){clearInterval(chatPoll);chatPoll=null;}if(livePollingInterval){clearInterval(livePollingInterval);livePollingInterval=null;}}
   var mpt=document.getElementById('mobilePT');if(mpt)mpt.textContent=VT[v]||v;
   var sb=document.getElementById('sb');if(sb)sb.classList.remove('open');
   document.querySelectorAll('.app-nav .ni').forEach(function(el){el.classList.remove('active');});
@@ -3594,23 +3594,30 @@ cont.innerHTML=h;
 }
 
 function saveLiveSess(){
-var title=document.getElementById('live-title');
-var dt=document.getElementById('live-dt');
-var url=document.getElementById('live-url');
-var desc=document.getElementById('live-desc');
-if(!title||!title.value.trim()){toast('Inserisci il titolo','w');return;}
-var sessions=JSON.parse(localStorage.getItem('pva_live_sessions')||'[]');
-sessions.push({
-id:'ls_'+Date.now(),
-title:title.value.trim(),
-dt:dt?dt.value:'',
-url:url?url.value.trim():'',
-desc:desc?desc.value.trim():''
-});
-localStorage.setItem('pva_live_sessions',JSON.stringify(sessions));
-title.value='';if(dt)dt.value='';if(url)url.value='';if(desc)desc.value='';
-toast('Sessione programmata!');
-rdLive();
+  var title = document.getElementById('live-title');
+  var dt    = document.getElementById('live-dt');
+  var url   = document.getElementById('live-url');
+  var desc  = document.getElementById('live-desc');
+  var dur   = document.getElementById('live-dur');
+  if(!title || !title.value.trim()){ toast('Inserisci il titolo della sessione','w'); return; }
+  var sessions = JSON.parse(localStorage.getItem('pva_live_sessions')||'[]');
+  sessions.push({
+    id:    'ls_'+Date.now(),
+    title: title.value.trim(),
+    dt:    dt    ? dt.value            : '',
+    dur:   dur   ? dur.value           : '1h',
+    url:   url   ? url.value.trim()    : '',
+    desc:  desc  ? desc.value.trim()   : ''
+  });
+  localStorage.setItem('pva_live_sessions', JSON.stringify(sessions));
+  // Clear form
+  title.value='';
+  if(dt)   dt.value='';
+  if(url)  url.value='';
+  if(desc) desc.value='';
+  toast('Sessione programmata! ✅');
+  rdScheduledSessions();
+  rdScheduledSessionsStudent();
 }
 
 function delLiveSess(idx){
