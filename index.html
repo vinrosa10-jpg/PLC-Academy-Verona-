@@ -1101,987 +1101,1145 @@ RESPONSIVE
 </div>
 
 <script>
-// ══════════════════════════════════════════
-// POCKETBASE CONFIG
-// ══════════════════════════════════════════
-// 👉 Cambia questa URL con il tuo servizio Render dopo il deploy
-const PB_URL = localStorage.getItem('pva_pb_url') || 'https://plc-verona-academy-backend.onrender.com';
+// ============================================================
+// PLC VERONA ACADEMY — CLEAN JS (no curly quotes, safe ASCII)
+// ============================================================
 
-// ══════════════════════
+// CONFIG
+var PB_URL = localStorage.getItem('pva_pb_url') || '';
+
 // STATE
-// ══════════════════════
-let currentUser  = null;
-let pbToken      = null;
-let currentView  = 'dashboard';
-let currentCourse= null;
-let currentLesson= 0;
-let currentQuizQ = 0;
-let quizAnswers  = [];
-let cachedCourses= null;
-let chatPollInterval = null;
+var currentUser  = null;
+var pbToken      = null;
+var currentView  = 'dashboard';
+var currentCourse= null;
+var currentLesson= 0;
+var currentQuizQ = 0;
+var quizAnswers  = [];
+var cachedCourses= null;
+var chatPollInt  = null;
+var selectedStars= 0;
 
-// ── API HELPER ──
-async function api(method, path, body=null, auth=true){
-  const headers = {'Content-Type':'application/json'};
-  if(auth && pbToken) headers['Authorization'] = pbToken;
-  const opts = {method, headers};
-  if(body) opts.body = JSON.stringify(body);
-  const res = await fetch(PB_URL+'/api/'+path, opts);
-  const data = await res.json();
-  if(!res.ok) throw new Error(data?.message || 'Errore API');
-  return data;
-}
-
-// ── OFFLINE FALLBACK (se PocketBase non ancora configurato) ──
-const FALLBACK_COURSES = [
-  { id:'c1', title:'PLC Base — Siemens S7', icon:'⚙️', level:'base', description:'Parti da zero e impara a programmare PLC Siemens S7-1200/S7-1500 con Ladder, FBD e SCL.', status:'disponibile', color:'blue',
-    lessons:[{title:'Introduzione ai PLC',dur:'45 min',yt:'dQw4w9WgXcQ'},{title:'Hardware S7-1200',dur:'38 min',yt:'dQw4w9WgXcQ'},{title:'TIA Portal — Prima apertura',dur:'52 min',yt:'dQw4w9WgXcQ'},{title:'Ladder: contatti e bobine',dur:'60 min',yt:'dQw4w9WgXcQ'},{title:'Blocchi funzione FBD',dur:'50 min',yt:'dQw4w9WgXcQ'},{title:'Temporizzatori TON/TOF',dur:'44 min',yt:'dQw4w9WgXcQ'}],
-    materials:[{name:'Manuale S7-1200.pdf',size:'4.2 MB',url:'#',type:'pdf'},{name:'Esercizi Ladder.pdf',size:'1.8 MB',url:'#',type:'pdf'}],
-    quiz:[{q:'Quale linguaggio usa simboli grafici a contatti?',opts:['Ladder (LAD)','SCL','FBD','SFC'],correct:0},{q:'Il blocco TON è un:',opts:['Temporizzatore ritardato','Contatore','Comparatore','Timer immediato'],correct:0},{q:'S7-1200 si programma con:',opts:['TIA Portal','Step 5','STEP 7 Classic','CoDeSys'],correct:0}]
+// ============================================================
+// FALLBACK COURSES
+// ============================================================
+var FALLBACK_COURSES = [
+  { id:'c1', title:'PLC Base - Siemens S7', icon:'⚙️', level:'base',
+    description:'Parti da zero e impara a programmare PLC Siemens S7-1200/S7-1500 con Ladder, FBD e SCL.',
+    status:'disponibile', color:'blue',
+    lessons:[
+      {title:'Introduzione ai PLC', dur:'45 min', yt:'dQw4w9WgXcQ'},
+      {title:'Hardware S7-1200', dur:'38 min', yt:'dQw4w9WgXcQ'},
+      {title:'TIA Portal - Prima apertura', dur:'52 min', yt:'dQw4w9WgXcQ'},
+      {title:'Ladder: contatti e bobine', dur:'60 min', yt:'dQw4w9WgXcQ'},
+      {title:'Blocchi funzione FBD', dur:'50 min', yt:'dQw4w9WgXcQ'},
+      {title:'Temporizzatori TON/TOF', dur:'44 min', yt:'dQw4w9WgXcQ'}
+    ],
+    materials:[
+      {name:'Manuale S7-1200.pdf', size:'4.2 MB', url:'#'},
+      {name:'Esercizi Ladder.pdf', size:'1.8 MB', url:'#'},
+      {name:'Schema elettrico base.pdf', size:'2.1 MB', url:'#'}
+    ],
+    quiz:[
+      {q:'Quale linguaggio usa simboli grafici a contatti?', opts:['Ladder (LAD)','SCL','FBD','SFC'], correct:0},
+      {q:'Il blocco TON e un:', opts:['Temporizzatore ritardato','Contatore','Comparatore','Timer immediato'], correct:0},
+      {q:'S7-1200 si programma con:', opts:['TIA Portal','Step 5','STEP 7 Classic','CoDeSys'], correct:0}
+    ]
   },
-  { id:'c2', title:'SCADA / HMI WinCC', icon:'🖥️', level:'intermedio', description:'Progetta interfacce operatore professionali con WinCC e TIA Portal HMI.', status:'disponibile', color:'teal',
-    lessons:[{title:'Introduzione a SCADA e HMI',dur:'40 min',yt:'dQw4w9WgXcQ'},{title:'WinCC — Primo progetto',dur:'55 min',yt:'dQw4w9WgXcQ'},{title:'Creazione schermate operatore',dur:'48 min',yt:'dQw4w9WgXcQ'},{title:'Gestione allarmi',dur:'42 min',yt:'dQw4w9WgXcQ'}],
-    materials:[{name:'WinCC Guida rapida.pdf',size:'3.5 MB',url:'#',type:'pdf'},{name:'Template schermate HMI.pdf',size:'2.0 MB',url:'#',type:'pdf'}],
-    quiz:[{q:'SCADA sta per:',opts:['Supervisory Control And Data Acquisition','Software Control And Data Access','System Control Automation Digital Acquisition','None'],correct:0},{q:'WinCC è un prodotto di:',opts:['Siemens','ABB','Rockwell','Schneider'],correct:0}]
+  { id:'c2', title:'SCADA / HMI WinCC', icon:'🖥️', level:'intermedio',
+    description:'Progetta interfacce operatore professionali con WinCC e TIA Portal HMI. Allarmi, ricette e trend storici.',
+    status:'disponibile', color:'teal',
+    lessons:[
+      {title:'Introduzione a SCADA e HMI', dur:'40 min', yt:'dQw4w9WgXcQ'},
+      {title:'WinCC - Primo progetto', dur:'55 min', yt:'dQw4w9WgXcQ'},
+      {title:'Creazione schermate operatore', dur:'48 min', yt:'dQw4w9WgXcQ'},
+      {title:'Gestione allarmi', dur:'42 min', yt:'dQw4w9WgXcQ'}
+    ],
+    materials:[
+      {name:'WinCC Guida rapida.pdf', size:'3.5 MB', url:'#'},
+      {name:'Template schermate HMI.pdf', size:'2.0 MB', url:'#'}
+    ],
+    quiz:[
+      {q:'SCADA sta per:', opts:['Supervisory Control And Data Acquisition','Software Control And Data Access','None','None2'], correct:0},
+      {q:'WinCC e un prodotto di:', opts:['Siemens','ABB','Rockwell','Schneider'], correct:0}
+    ]
   },
-  { id:'c3', title:'Automazione + AI', icon:'🤖', level:'avanzato', description:'Integra intelligenza artificiale e Machine Learning nei sistemi PLC.', status:'prossimamente', color:'navy',
-    lessons:[{title:'Industry 4.0 e IIoT',dur:'50 min',yt:'dQw4w9WgXcQ'},{title:'OPC-UA e comunicazione dati',dur:'45 min',yt:'dQw4w9WgXcQ'}],
-    materials:[{name:'Industry 4.0 Overview.pdf',size:'5.1 MB',url:'#',type:'pdf'}],
-    quiz:[{q:'IIoT significa:',opts:['Industrial Internet of Things','Intelligent Industrial Operations Technology','Integrated Industrial Online Tools','None'],correct:0}]
+  { id:'c3', title:'Automazione + AI', icon:'🤖', level:'avanzato',
+    description:'Integra intelligenza artificiale e Machine Learning nei sistemi PLC. IIoT e Industry 4.0.',
+    status:'prossimamente', color:'navy',
+    lessons:[
+      {title:'Industry 4.0 e IIoT', dur:'50 min', yt:'dQw4w9WgXcQ'},
+      {title:'OPC-UA e comunicazione dati', dur:'45 min', yt:'dQw4w9WgXcQ'}
+    ],
+    materials:[{name:'Industry 4.0 Overview.pdf', size:'5.1 MB', url:'#'}],
+    quiz:[{q:'IIoT significa:', opts:['Industrial Internet of Things','Intelligent Industrial Operations Technology','Integrated Industrial Online Tools','None'], correct:0}]
   }
 ];
 
-// Parse courses from PocketBase format
-function parseCourse(r){
-  return {
-    id: r.id,
-    title: r.title,
-    icon: r.icon||'⚙️',
-    level: r.level||'base',
-    description: r.description||r.desc||'',
-    desc: r.description||r.desc||'',
-    status: r.status||'disponibile',
-    color: r.color||'blue',
-    lessons: typeof r.lessons==='string'?JSON.parse(r.lessons||'[]'):r.lessons||[],
-    materials: typeof r.materials==='string'?JSON.parse(r.materials||'[]'):r.materials||[],
-    quiz: typeof r.quiz==='string'?JSON.parse(r.quiz||'[]'):r.quiz||[],
-  };
-}
+var DEFAULT_REVIEWS = [
+  {id:'r1',author_name:'Luca Ferrarini',author_role:'Tecnico automazione',course_name:'PLC Base - Siemens S7',stars:5,text:'Corso eccellente! Finalmente formazione pratica su hardware reale.',created:'2025-03-01'},
+  {id:'r2',author_name:'Sara Colombo',author_role:'Studentessa ingegneria',course_name:'SCADA / HMI WinCC',stars:5,text:'Chiarissimo e ben strutturato. Ho trovato lavoro subito dopo il corso.',created:'2025-02-15'},
+  {id:'r3',author_name:'Marco Bianchi',author_role:'Elettricista industriale',course_name:'PLC Base - Siemens S7',stars:5,text:'Venivo dal mondo elettrico. Ora programmo PLC Siemens in autonomia.',created:'2025-01-20'},
+  {id:'r4',author_name:'Giulia Martini',author_role:'Ingegnere di processo',course_name:'SCADA / HMI WinCC',stars:4,text:'Ottimi contenuti. Le dirette live sono il valore aggiunto.',created:'2025-04-01'},
+  {id:'r5',author_name:'Andrea Russo',author_role:'Tecnico manutenzione',course_name:'PLC Base - Siemens S7',stars:5,text:'Adesso mi sento sicuro nel gestire i PLC in azienda.',created:'2025-03-10'},
+  {id:'r6',author_name:'Valentina Ricci',author_role:'Neolaureata automazione',course_name:'Automazione + AI',stars:5,text:'Il corso sull AI applicata e visionario. PLC e futuro insieme.',created:'2025-04-05'}
+];
 
-// Progress stored locally per user (with PocketBase sync)
+// ============================================================
+// UTILS
+// ============================================================
 function getProgress(){
-  return JSON.parse(localStorage.getItem('pva_prog_'+(currentUser?.id||''))||'{}');
+  var uid = currentUser ? currentUser.id : '';
+  try { return JSON.parse(localStorage.getItem('pva_prog_'+uid) || '{}'); } catch(e){ return {}; }
 }
 function saveProgress(p){
-  localStorage.setItem('pva_prog_'+(currentUser?.id||''), JSON.stringify(p));
-  // Async sync to PocketBase enrollments
-  if(currentCourse && pbToken) syncEnrollment(currentCourse.id, p[currentCourse.id]||{});
+  var uid = currentUser ? currentUser.id : '';
+  localStorage.setItem('pva_prog_'+uid, JSON.stringify(p));
 }
-async function syncEnrollment(courseId, cp){
-  try {
-    const completed = cp.completed||[];
-    const progress = Math.round(completed.length / (currentCourse?.lessons?.length||1) * 100);
-    // Check if enrollment exists
-    try {
-      const existing = await api('GET', `collections/enrollments/records?filter=(user="${currentUser.id}"&&course="${courseId}")`, null);
-      if(existing.items?.length){
-        await api('PATCH', `collections/enrollments/records/${existing.items[0].id}`, {completed_lessons: JSON.stringify(completed), quiz_score: cp.quizScore||0, progress});
-      } else {
-        await api('POST', 'collections/enrollments/records', {user:currentUser.id, course:courseId, completed_lessons: JSON.stringify(completed), quiz_score: cp.quizScore||0, progress});
-      }
-    } catch(e){}
-  } catch(e){}
+function getOfflineUsers(){
+  try { return JSON.parse(localStorage.getItem('pva_offline_users') || '[]'); } catch(e){ return []; }
+}
+function saveOfflineUsers(u){ localStorage.setItem('pva_offline_users', JSON.stringify(u)); }
+function getOfflineReviews(){
+  try { return JSON.parse(localStorage.getItem('pva_reviews_local') || '[]'); } catch(e){ return []; }
 }
 
-// ══════════════════════
-// AUTH
-// ══════════════════════
+function showAlert(id, msg, type){
+  var el = document.getElementById(id);
+  if(!el) return;
+  if(!msg){ el.innerHTML = ''; return; }
+  var colors = {error:'#fef2f2',success:'#f0fdf4',info:'#eff6ff'};
+  var borders = {error:'#fecaca',success:'#bbf7d0',info:'#bfdbfe'};
+  var texts   = {error:'#dc2626',success:'#16a34a',info:'#1d4ed8'};
+  el.innerHTML = '<div style="padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500;background:'+
+    (colors[type]||colors.info)+';border:1px solid '+(borders[type]||borders.info)+
+    ';color:'+(texts[type]||texts.info)+';">'+msg+'</div>';
+}
+
+function toast(msg, type){
+  var c = document.getElementById('toast-container');
+  if(!c){
+    c = document.createElement('div');
+    c.id = 'toast-container';
+    c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+    document.body.appendChild(c);
+  }
+  var t = document.createElement('div');
+  var col = type==='error'?'#ef4444':type==='warning'?'#f59e0b':'#00b86b';
+  var ico = type==='error'?'❌':type==='warning'?'⚠️':'✅';
+  t.style.cssText = 'background:#fff;border-left:4px solid '+col+';border-radius:10px;padding:14px 18px;font-size:14px;font-weight:500;color:#0a1628;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px;min-width:280px;max-width:360px;';
+  t.innerHTML = '<span>'+ico+'</span><span style="flex:1;">'+msg+'</span>';
+  c.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3500);
+}
+
+// ============================================================
+// AUTH MODAL
+// ============================================================
 function openModal(tab){
-  document.getElementById('authModal').classList.remove('hidden');
-  switchTab(tab);
+  var m = document.getElementById('authModal');
+  if(m) m.classList.remove('hidden');
+  switchTab(tab || 'login');
 }
 function closeModal(){
-  document.getElementById('authModal').classList.add('hidden');
-  document.getElementById('modal-alert').innerHTML='';
+  var m = document.getElementById('authModal');
+  if(m) m.classList.add('hidden');
+  showAlert('modal-alert','','');
 }
 function switchTab(tab){
-  document.getElementById('tab-login').classList.toggle('active', tab==='login');
-  document.getElementById('tab-register').classList.toggle('active', tab==='register');
-  document.getElementById('form-login').classList.toggle('hidden', tab!=='login');
-  document.getElementById('form-register').classList.toggle('hidden', tab!=='register');
-  document.getElementById('modalTitle').textContent = tab==='login' ? 'Accedi' : 'Registrati';
-  document.getElementById('modal-alert').innerHTML='';
+  var tl = document.getElementById('tab-login');
+  var tr = document.getElementById('tab-register');
+  var fl = document.getElementById('form-login');
+  var fr = document.getElementById('form-register');
+  var mt = document.getElementById('modalTitle');
+  if(!tl||!tr||!fl||!fr) return;
+  if(tab === 'login'){
+    tl.classList.add('active');    tr.classList.remove('active');
+    fl.classList.remove('hidden'); fr.classList.add('hidden');
+    if(mt) mt.textContent = 'Accedi';
+  } else {
+    tr.classList.add('active');    tl.classList.remove('active');
+    fr.classList.remove('hidden'); fl.classList.add('hidden');
+    if(mt) mt.textContent = 'Registrati';
+  }
+  showAlert('modal-alert','','');
 }
 
-async function loginUser(){
-  const emailEl = document.getElementById('login-email');
-  const passEl  = document.getElementById('login-password');
-  const alertId = 'modal-alert';
+// ============================================================
+// LOGIN
+// ============================================================
+function loginUser(){
+  var emailEl = document.getElementById('login-email');
+  var passEl  = document.getElementById('login-password');
+  if(!emailEl || !passEl){ showAlert('modal-alert','Errore: ricarica la pagina','error'); return; }
+  var email = emailEl.value.trim();
+  var pass  = passEl.value;
+  if(!email){ showAlert('modal-alert','Inserisci la tua email','error'); emailEl.focus(); return; }
+  if(!pass){  showAlert('modal-alert','Inserisci la password','error'); passEl.focus(); return; }
 
-  const email = emailEl ? emailEl.value.trim() : '';
-  const pass  = passEl  ? passEl.value : '';
-
-  if(!email){ showAlert(alertId,'Inserisci la tua email','error'); return; }
-  if(!pass){  showAlert(alertId,'Inserisci la password','error'); return; }
-
-  showAlert(alertId,'⏳ Accesso in corso...','info');
-
-  // Prova PocketBase
-  let pbSuccess = false;
-  try {
-    const pbUrl = localStorage.getItem('pva_pb_url');
-    if(pbUrl && pbUrl.length > 10){
-      const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
-      pbToken     = res.token;
-      currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role||'student', profile:res.record.profile_type||'Studente' };
-      localStorage.setItem('pva_token', pbToken);
-      localStorage.setItem('pva_user',  JSON.stringify(currentUser));
-      pbSuccess = true;
-    }
-  } catch(e){
-    console.log('PocketBase login fallito:', e.message);
+  // Admin di default
+  if(email === 'admin@plcveronaacademy.it' && pass === 'Admin1234!'){
+    currentUser = {id:'admin_local', name:'Admin Academy', email:email, role:'admin', profile:'Admin'};
+    emailEl.value=''; passEl.value='';
+    closeModal(); enterApp(); return;
   }
 
-  // Fallback locale
-  if(!pbSuccess){
-    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
-    // Controlla anche admin default
-    const adminUser = {id:'admin_local',name:'Admin Academy',email:'admin@plcveronaacademy.it',password:'Admin1234!',role:'admin',profile:'Admin'};
-    const allUsers  = [adminUser, ...offlineUsers];
-    const found = allUsers.find(u=>u.email===email && u.password===pass);
-    if(found){
-      currentUser = found; pbToken = null;
-      pbSuccess = true;
-    } else {
-      showAlert(alertId,'Email o password errati','error');
-      return;
+  // Utenti registrati localmente
+  var users = getOfflineUsers();
+  var found = null;
+  for(var i=0; i<users.length; i++){
+    if(users[i].email === email && users[i].password === pass){ found = users[i]; break; }
+  }
+  if(found){
+    currentUser = found; pbToken = null;
+    emailEl.value=''; passEl.value='';
+    closeModal(); enterApp(); return;
+  }
+
+  // Se PocketBase configurato, prova online
+  if(PB_URL && PB_URL.length > 10){
+    showAlert('modal-alert','Accesso in corso...','info');
+    fetch(PB_URL+'/api/collections/users/auth-with-password', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({identity:email, password:pass})
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(res.token){
+        pbToken = res.token;
+        currentUser = {
+          id: res.record.id,
+          name: res.record.full_name || res.record.name || email,
+          email: res.record.email,
+          role: res.record.role || 'student',
+          profile: res.record.profile_type || 'Studente'
+        };
+        localStorage.setItem('pva_token', pbToken);
+        localStorage.setItem('pva_user', JSON.stringify(currentUser));
+        emailEl.value=''; passEl.value='';
+        closeModal(); enterApp();
+      } else {
+        showAlert('modal-alert','Email o password errati','error');
+      }
+    }).catch(function(e){
+      showAlert('modal-alert','Email o password errati','error');
+    });
+    return;
+  }
+
+  showAlert('modal-alert','Email o password non trovati','error');
+}
+
+// ============================================================
+// REGISTER
+// ============================================================
+function registerUser(src){
+  var isModal = (src === 'modal');
+  var nameId  = isModal ? 'modal-reg-name'     : 'reg-name';
+  var emailId = isModal ? 'modal-reg-email'    : 'reg-email';
+  var passId  = isModal ? 'modal-reg-password' : 'reg-password';
+  var profId  = isModal ? 'modal-reg-profile'  : 'reg-profile';
+  var alertId = isModal ? 'modal-alert'        : 'landing-reg-alert';
+
+  var nameEl  = document.getElementById(nameId);
+  var emailEl = document.getElementById(emailId);
+  var passEl  = document.getElementById(passId);
+  var profEl  = document.getElementById(profId);
+
+  if(!nameEl || !emailEl || !passEl){
+    showAlert(alertId, 'Errore interno: ricarica la pagina', 'error'); return;
+  }
+
+  var name  = nameEl.value.trim();
+  var email = emailEl.value.trim();
+  var pass  = passEl.value;
+  var prof  = profEl ? profEl.value : 'Studente';
+
+  if(!name){
+    showAlert(alertId, 'Inserisci il tuo nome completo', 'error'); nameEl.focus(); return;
+  }
+  if(!email || email.indexOf('@') < 0){
+    showAlert(alertId, 'Inserisci una email valida', 'error'); emailEl.focus(); return;
+  }
+  if(!pass || pass.length < 6){
+    showAlert(alertId, 'La password deve avere almeno 6 caratteri', 'error'); passEl.focus(); return;
+  }
+
+  // Controlla duplicati locali
+  var users = getOfflineUsers();
+  for(var i=0; i<users.length; i++){
+    if(users[i].email === email){
+      showAlert(alertId, 'Email gia registrata. Prova ad accedere.', 'error'); return;
     }
   }
 
-  if(emailEl) emailEl.value='';
-  if(passEl)  passEl.value='';
-  closeModal();
+  // Salva localmente subito
+  var newUser = {
+    id: 'local_' + Date.now(),
+    name: name, email: email, password: pass,
+    role: 'student', profile: prof || 'Studente',
+    date: new Date().toLocaleDateString('it-IT')
+  };
+  users.push(newUser);
+  saveOfflineUsers(users);
+  currentUser = newUser;
+  pbToken = null;
+
+  // Svuota campi
+  nameEl.value=''; emailEl.value=''; passEl.value='';
+  if(profEl) profEl.value='';
+
+  if(isModal) closeModal();
   enterApp();
+
+  // Prova anche PocketBase in background (non blocca)
+  if(PB_URL && PB_URL.length > 10){
+    fetch(PB_URL+'/api/collections/users/records', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email:email, password:pass, passwordConfirm:pass, full_name:name, role:'student', profile_type:prof||'Studente', emailVisibility:true})
+    }).catch(function(){ /* silently ignore */ });
+  }
 }
 
-async function registerUser(src){
-  const nameId  = src==='modal' ? 'modal-reg-name'     : 'reg-name';
-  const emailId = src==='modal' ? 'modal-reg-email'    : 'reg-email';
-  const passId  = src==='modal' ? 'modal-reg-password' : 'reg-password';
-  const profId  = src==='modal' ? 'modal-reg-profile'  : 'reg-profile';
-  const alertId = src==='modal' ? 'modal-alert'        : 'landing-reg-alert';
-
-  const nameEl  = document.getElementById(nameId);
-  const emailEl = document.getElementById(emailId);
-  const passEl  = document.getElementById(passId);
-  const profEl  = document.getElementById(profId);
-
-  if(!nameEl||!emailEl||!passEl){
-    showAlert(alertId,'Errore: campi non trovati. Ricarica la pagina.','error'); return;
-  }
-
-  const name  = nameEl.value.trim();
-  const email = emailEl.value.trim();
-  const pass  = passEl.value;
-  const prof  = profEl ? profEl.value : 'Studente';
-
-  // Validazione
-  if(!name){ showAlert(alertId,'Inserisci il tuo nome','error'); nameEl.focus(); return; }
-  if(!email || !email.includes('@')){ showAlert(alertId,'Inserisci un'email valida','error'); emailEl.focus(); return; }
-  if(!pass || pass.length<6){ showAlert(alertId,'Password minimo 6 caratteri','error'); passEl.focus(); return; }
-
-  showAlert(alertId,'⏳ Registrazione in corso...','info');
-
-  // Prima prova con PocketBase
-  let pbSuccess = false;
-  try {
-    const pbUrl = localStorage.getItem('pva_pb_url');
-    if(pbUrl && pbUrl.length > 10){
-      await api('POST','collections/users/records',{
-        email, password:pass, passwordConfirm:pass,
-        full_name:name, role:'student', profile_type:prof||'Studente', emailVisibility:true
-      }, false);
-      const res = await api('POST','collections/users/auth-with-password',{identity:email,password:pass},false);
-      pbToken     = res.token;
-      currentUser = { id:res.record.id, name:res.record.full_name, email:res.record.email, role:res.record.role||'student', profile:res.record.profile_type||'Studente' };
-      localStorage.setItem('pva_token', pbToken);
-      localStorage.setItem('pva_user',  JSON.stringify(currentUser));
-      pbSuccess = true;
-    }
-  } catch(e){
-    console.log('PocketBase non disponibile, uso modalità locale:', e.message);
-  }
-
-  // Fallback locale (funziona sempre)
-  if(!pbSuccess){
-    const offlineUsers = JSON.parse(localStorage.getItem('pva_offline_users')||'[]');
-    if(offlineUsers.find(u=>u.email===email)){
-      showAlert(alertId,'Email già registrata. Prova ad accedere.','error'); return;
-    }
-    const newUser = {
-      id: 'local_'+Date.now(),
-      name, email, password: pass,
-      role: 'student',
-      profile: prof||'Studente',
-      date: new Date().toLocaleDateString('it-IT')
-    };
-    offlineUsers.push(newUser);
-    localStorage.setItem('pva_offline_users', JSON.stringify(offlineUsers));
-    currentUser = newUser;
-    pbToken = null;
-  }
-
-  // Svuota i campi
-  nameEl.value=''; emailEl.value=''; passEl.value=''; if(profEl) profEl.value='';
-
-  if(src==='modal') closeModal();
-  enterApp();
-  if(!pbSuccess) showBanner('✅ Account creato in locale — collega il backend per sincronizzare');
-}
-
+// ============================================================
+// LOGOUT
+// ============================================================
 function logout(){
   currentUser=null; pbToken=null;
   localStorage.removeItem('pva_token');
   localStorage.removeItem('pva_user');
   cachedCourses=null;
-  if(chatPollInterval){ clearInterval(chatPollInterval); chatPollInterval=null; }
-  document.getElementById('page-app').classList.add('hidden');
-  document.getElementById('page-landing').classList.remove('hidden');
-  document.getElementById('sidebar').classList.remove('open');
+  if(chatPollInt){ clearInterval(chatPollInt); chatPollInt=null; }
+  var app = document.getElementById('page-app');
+  var land= document.getElementById('page-landing');
+  var sb  = document.getElementById('sidebar');
+  if(app)  app.classList.add('hidden');
+  if(land) land.classList.remove('hidden');
+  if(sb)   sb.classList.remove('open');
 }
 
-// Auto-restore session on load
+// Auto-restore session
 (function(){
-  const token = localStorage.getItem('pva_token');
-  const user  = localStorage.getItem('pva_user');
+  var token = localStorage.getItem('pva_token');
+  var user  = localStorage.getItem('pva_user');
   if(token && user){
-    pbToken = token;
-    currentUser = JSON.parse(user);
-    // Verify token is still valid
-    api('GET','collections/users/records/'+currentUser.id).then(()=>{
+    try {
+      pbToken = token;
+      currentUser = JSON.parse(user);
       enterApp();
-    }).catch(()=>{
+    } catch(e){
       localStorage.removeItem('pva_token');
       localStorage.removeItem('pva_user');
-    });
+    }
   }
 })();
 
-// ══════════════════════
-// APP INIT
-// ══════════════════════
+// ============================================================
+// ENTER APP
+// ============================================================
 function enterApp(){
-  document.getElementById('page-landing').classList.add('hidden');
-  document.getElementById('page-app').classList.remove('hidden');
-  const initials = currentUser.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-  ['sidebarAvatar','topbarAvatar','profileAvatar'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=initials; });
-  document.getElementById('sidebarName').textContent   = currentUser.name;
-  document.getElementById('sidebarRole').textContent   = currentUser.role==='admin'?'ADMIN':'STUDENTE';
-  document.getElementById('welcomeName').textContent   = currentUser.name.split(' ')[0];
-  document.getElementById('profileName').textContent   = currentUser.name;
-  document.getElementById('profileEmail').textContent  = currentUser.email;
-  document.getElementById('profile-name-input').value  = currentUser.name;
-  document.getElementById('profileRole').textContent   = currentUser.role==='admin'?'Admin':'Studente';
-  if(currentUser.role==='admin'){
-    document.getElementById('adminSection').style.display='';
-    document.getElementById('navAdmin').classList.remove('hidden');
-    document.getElementById('navUsers').classList.remove('hidden');
+  var landing = document.getElementById('page-landing');
+  var app     = document.getElementById('page-app');
+  if(landing) landing.classList.add('hidden');
+  if(app)     app.classList.remove('hidden');
+
+  var initials = currentUser.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0,2).toUpperCase();
+  var ids = ['sidebarAvatar','topbarAvatar','profileAvatar'];
+  for(var i=0; i<ids.length; i++){
+    var el = document.getElementById(ids[i]);
+    if(el) el.textContent = initials;
+  }
+  var sn = document.getElementById('sidebarName');
+  var sr = document.getElementById('sidebarRole');
+  var wn = document.getElementById('welcomeName');
+  var pn = document.getElementById('profileName');
+  var pe = document.getElementById('profileEmail');
+  var pi = document.getElementById('profile-name-input');
+  var pr = document.getElementById('profileRole');
+  if(sn) sn.textContent = currentUser.name;
+  if(sr) sr.textContent = currentUser.role==='admin'?'ADMIN':'STUDENTE';
+  if(wn) wn.textContent = currentUser.name.split(' ')[0];
+  if(pn) pn.textContent = currentUser.name;
+  if(pe) pe.textContent = currentUser.email;
+  if(pi) pi.value       = currentUser.name;
+  if(pr) pr.textContent = currentUser.role==='admin'?'Admin':'Studente';
+
+  if(currentUser.role === 'admin'){
+    var as = document.getElementById('adminSection');
+    var na = document.getElementById('navAdmin');
+    var nu = document.getElementById('navUsers');
+    if(as) as.style.display='';
+    if(na) na.classList.remove('hidden');
+    if(nu) nu.classList.remove('hidden');
   }
   showView('dashboard');
 }
 
-// ══════════════════════
+// ============================================================
 // VIEWS
-// ══════════════════════
-const views=['dashboard','courses','live','admin','users','profile','reviews'];
+// ============================================================
+var views = ['dashboard','courses','live','admin','users','profile','reviews'];
 function showView(v){
-  views.forEach(x=>{ const el=document.getElementById('view-'+x); if(el) el.classList.add('hidden'); });
-  document.getElementById('view-'+v)?.classList.remove('hidden');
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el=>{ if(el.getAttribute('onclick')?.includes("'"+v+"'")) el.classList.add('active'); });
-  const titles={dashboard:'Dashboard',courses:'I miei corsi',live:'Diretta Live',admin:'Gestione corsi',users:'Gestione utenti',profile:'Profilo',reviews:'Recensioni'};
-  document.getElementById('topbarTitle').textContent = titles[v]||v;
-  currentView=v;
+  for(var i=0; i<views.length; i++){
+    var el = document.getElementById('view-'+views[i]);
+    if(el) el.classList.add('hidden');
+  }
+  var target = document.getElementById('view-'+v);
+  if(target) target.classList.remove('hidden');
+
+  var navItems = document.querySelectorAll('.nav-item');
+  for(var i=0; i<navItems.length; i++){
+    navItems[i].classList.remove('active');
+    var oc = navItems[i].getAttribute('onclick');
+    if(oc && oc.indexOf("'"+v+"'") >= 0) navItems[i].classList.add('active');
+  }
+  var titles = {dashboard:'Dashboard',courses:'I miei corsi',live:'Diretta Live',admin:'Gestione corsi',users:'Gestione utenti',profile:'Profilo',reviews:'Recensioni'};
+  var tt = document.getElementById('topbarTitle');
+  if(tt) tt.textContent = titles[v] || v;
+  currentView = v;
+
   if(v==='dashboard') renderDashboard();
   if(v==='courses')   renderCourses();
   if(v==='admin')     renderAdmin();
   if(v==='reviews')   renderReviews();
   if(v==='users')     renderUsers();
   if(v==='live')      initLiveChat();
-  else { if(chatPollInterval){ clearInterval(chatPollInterval); chatPollInterval=null; } }
-  document.getElementById('sidebar').classList.remove('open');
+  else { if(chatPollInt){ clearInterval(chatPollInt); chatPollInt=null; } }
+
+  var sb = document.getElementById('sidebar');
+  if(sb) sb.classList.remove('open');
 }
 
-// ══════════════════════
-// DASHBOARD
-// ══════════════════════
-async function renderDashboard(){
-  const courses = await loadCourses();
-  const prog    = getProgress();
-  let completedTotal=0, quizScores=[];
-  courses.forEach(c=>{ const cp=prog[c.id]||{}; completedTotal+=(cp.completed||[]).length; if(cp.quizScore!==undefined) quizScores.push(cp.quizScore); });
-  document.getElementById('statCompleted').textContent = completedTotal;
-  document.getElementById('statQuiz').textContent = quizScores.length?Math.round(quizScores.reduce((a,b)=>a+b,0)/quizScores.length)+'%':'—';
-
-  const list = document.getElementById('dashCoursesList');
-  list.innerHTML = courses.map(c=>{
-    const cp=prog[c.id]||{}; const done=(cp.completed||[]).length; const pct=c.lessons.length?Math.round(done/c.lessons.length*100):0;
-    return `<div class="card" style="padding:20px;margin-bottom:16px;cursor:pointer;" onclick="openCourse('${c.id}')">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-        <div style="font-size:32px;">${c.icon}</div>
-        <div style="flex:1;"><div style="font-weight:700;font-size:15px;">${c.title}</div><div style="font-size:13px;color:var(--muted);">${done}/${c.lessons.length} lezioni</div></div>
-        <span class="badge ${c.status==='disponibile'?'badge-green':'badge-yellow'}">${c.status}</span>
-      </div>
-      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;text-align:right;">${pct}% completato</div>
-    </div>`;
-  }).join('');
-
-  const pl=document.getElementById('progressList');
-  pl.innerHTML=courses.map(c=>{ const cp=prog[c.id]||{}; const pct=c.lessons.length?Math.round(((cp.completed||[]).length)/c.lessons.length*100):0;
-    return `<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;"><span>${c.icon} ${c.title.split('—')[0]}</span><span style="color:var(--primary);">${pct}%</span></div><div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div></div>`;
-  }).join('');
-}
-
-// ══════════════════════
-// COURSES
-// ══════════════════════
-async function loadCourses(){
-  if(cachedCourses) return cachedCourses;
-  try {
-    const res = await api('GET','collections/courses/records?perPage=50&sort=created');
-    cachedCourses = res.items.map(parseCourse);
-    return cachedCourses;
-  } catch(e){
-    return FALLBACK_COURSES;
+// ============================================================
+// LOAD COURSES
+// ============================================================
+function loadCourses(callback){
+  if(cachedCourses){ callback(cachedCourses); return; }
+  if(PB_URL && PB_URL.length > 10){
+    fetch(PB_URL+'/api/collections/courses/records?perPage=50&sort=created', {
+      headers: pbToken ? {'Authorization':pbToken} : {}
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(res.items && res.items.length > 0){
+        cachedCourses = res.items.map(function(r){
+          return {
+            id:r.id, title:r.title, icon:r.icon||'⚙️', level:r.level||'base',
+            description:r.description||'', desc:r.description||'',
+            status:r.status||'disponibile', color:r.color||'blue',
+            lessons: typeof r.lessons==='string'?JSON.parse(r.lessons||'[]'):r.lessons||[],
+            materials: typeof r.materials==='string'?JSON.parse(r.materials||'[]'):r.materials||[],
+            quiz: typeof r.quiz==='string'?JSON.parse(r.quiz||'[]'):r.quiz||[]
+          };
+        });
+        callback(cachedCourses);
+      } else {
+        cachedCourses = FALLBACK_COURSES;
+        callback(cachedCourses);
+      }
+    }).catch(function(){ cachedCourses=FALLBACK_COURSES; callback(cachedCourses); });
+  } else {
+    cachedCourses = FALLBACK_COURSES;
+    callback(cachedCourses);
   }
 }
 
-async function renderCourses(){
-  document.getElementById('courses-list-view').classList.remove('hidden');
-  document.getElementById('course-player-view').classList.add('hidden');
-  const courses = await loadCourses();
-  const grid = document.getElementById('appCoursesGrid');
-  const prog  = getProgress();
-  const levelColors={base:'badge-blue',intermedio:'badge-yellow',avanzato:'badge-red'};
-  grid.innerHTML = courses.map(c=>{
-    const cp=prog[c.id]||{}; const pct=c.lessons.length?Math.round(((cp.completed||[]).length)/c.lessons.length*100):0;
-    return `<div class="course-card" onclick="openCourse('${c.id}')">
-      <div class="cc-header ${c.color||'blue'}"><div class="cc-header-grid"></div><div class="cc-icon">${c.icon}</div></div>
-      <div class="cc-body">
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          <span class="badge ${levelColors[c.level]||'badge-blue'}">${c.level}</span>
-          <span class="badge ${c.status==='disponibile'?'badge-green':'badge-yellow'}">${c.status}</span>
-        </div>
-        <div class="cc-title">${c.title}</div>
-        <div class="cc-desc">${c.description||c.desc}</div>
-        <div class="cc-meta"><span>📹 ${c.lessons.length} lezioni</span><span>📄 ${c.materials.length} PDF</span><span>✅ ${c.quiz.length} quiz</span></div>
-        <div class="progress-bar-wrap" style="margin-bottom:12px;"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-        <div class="cc-footer"><div style="font-size:13px;color:var(--muted);">${pct}% completato</div><button class="btn btn-primary btn-sm">${pct>0?'Continua →':'Inizia →'}</button></div>
-      </div>
-    </div>`;
-  }).join('');
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  loadCourses(function(courses){
+    var prog = getProgress();
+    var completedTotal = 0, quizScores = [];
+    for(var i=0; i<courses.length; i++){
+      var cp = prog[courses[i].id] || {};
+      completedTotal += (cp.completed||[]).length;
+      if(cp.quizScore !== undefined) quizScores.push(cp.quizScore);
+    }
+    var sc = document.getElementById('statCompleted');
+    var sq = document.getElementById('statQuiz');
+    if(sc) sc.textContent = completedTotal;
+    if(sq) sq.textContent = quizScores.length ? Math.round(quizScores.reduce(function(a,b){return a+b;},0)/quizScores.length)+'%' : '—';
+
+    var list = document.getElementById('dashCoursesList');
+    if(list){
+      var html = '';
+      for(var i=0; i<courses.length; i++){
+        var c = courses[i];
+        var cp = prog[c.id] || {completed:[]};
+        var done = (cp.completed||[]).length;
+        var pct  = c.lessons.length ? Math.round(done/c.lessons.length*100) : 0;
+        var statusBadge = c.status==='disponibile' ? 'badge-green' : 'badge-yellow';
+        html += '<div class="card" style="padding:20px;margin-bottom:14px;cursor:pointer;" onclick="openCourse(\''+c.id+'\')">';
+        html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">';
+        html += '<div style="font-size:32px;">'+c.icon+'</div>';
+        html += '<div style="flex:1;"><div style="font-weight:700;font-size:15px;">'+c.title+'</div>';
+        html += '<div style="font-size:13px;color:var(--muted);">'+done+'/'+c.lessons.length+' lezioni</div></div>';
+        html += '<span class="badge '+statusBadge+'">'+c.status+'</span></div>';
+        html += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>';
+        html += '<div style="font-size:12px;color:var(--muted);margin-top:6px;text-align:right;">'+pct+'% completato</div>';
+        html += '</div>';
+      }
+      list.innerHTML = html;
+    }
+
+    var pl = document.getElementById('progressList');
+    if(pl){
+      var html2 = '';
+      for(var i=0; i<courses.length; i++){
+        var c = courses[i];
+        var cp = prog[c.id]||{completed:[]};
+        var pct = c.lessons.length ? Math.round((cp.completed||[]).length/c.lessons.length*100) : 0;
+        html2 += '<div style="margin-bottom:14px;">';
+        html2 += '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px;">';
+        html2 += '<span>'+c.icon+' '+c.title.split('—')[0].split('-')[0].trim()+'</span>';
+        html2 += '<span style="color:var(--primary);">'+pct+'%</span></div>';
+        html2 += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div></div>';
+      }
+      pl.innerHTML = html2;
+    }
+  });
 }
 
-function filterCourses(q){ document.querySelectorAll('#appCoursesGrid .course-card').forEach(c=>{ c.style.display=c.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'; }); }
-function filterByLevel(level,btn){ document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('#appCoursesGrid .course-card').forEach(c=>{ c.style.display=level==='all'||c.textContent.toLowerCase().includes(level)?'':'none'; }); }
+// ============================================================
+// COURSES LIST
+// ============================================================
+function renderCourses(){
+  var listView   = document.getElementById('courses-list-view');
+  var playerView = document.getElementById('course-player-view');
+  if(listView)   listView.classList.remove('hidden');
+  if(playerView) playerView.classList.add('hidden');
 
-async function openCourse(id){
-  const courses = await loadCourses();
-  currentCourse = courses.find(c=>c.id===id);
-  currentLesson=0; currentQuizQ=0; quizAnswers=[];
-  document.getElementById('courses-list-view').classList.add('hidden');
-  document.getElementById('course-player-view').classList.remove('hidden');
-  renderPlayer();
+  loadCourses(function(courses){
+    var grid = document.getElementById('appCoursesGrid');
+    if(!grid) return;
+    var prog = getProgress();
+    var levelColors = {base:'badge-blue',intermedio:'badge-yellow',avanzato:'badge-red'};
+    var html = '';
+    for(var i=0; i<courses.length; i++){
+      var c = courses[i];
+      var cp = prog[c.id]||{completed:[]};
+      var pct = c.lessons.length ? Math.round((cp.completed||[]).length/c.lessons.length*100) : 0;
+      var lc  = levelColors[c.level] || 'badge-blue';
+      var sc  = c.status==='disponibile' ? 'badge-green' : 'badge-yellow';
+      html += '<div class="course-card" onclick="openCourse(\''+c.id+'\')">';
+      html += '<div class="cc-header '+c.color+'"><div class="cc-header-grid"></div><div class="cc-icon">'+c.icon+'</div></div>';
+      html += '<div class="cc-body">';
+      html += '<div class="cc-badges"><span class="badge '+lc+'">'+c.level+'</span><span class="badge '+sc+'">'+c.status+'</span></div>';
+      html += '<div class="cc-title">'+c.title+'</div>';
+      html += '<div class="cc-desc">'+(c.description||c.desc||'')+'</div>';
+      html += '<div class="cc-meta"><span>📹 '+c.lessons.length+' lezioni</span><span>📄 '+c.materials.length+' PDF</span><span>✅ '+c.quiz.length+' quiz</span></div>';
+      html += '<div class="progress-bar-wrap" style="margin-bottom:12px;"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>';
+      html += '<div class="cc-footer"><div style="font-size:13px;color:var(--muted);">'+pct+'% completato</div>';
+      html += '<button class="btn btn-primary btn-sm">'+(pct>0?'Continua &rarr;':'Inizia &rarr;')+'</button></div>';
+      html += '</div></div>';
+    }
+    grid.innerHTML = html;
+  });
 }
 
-function renderPlayer(tab='video'){
-  const c=currentCourse; const prog=getProgress(); const cp=prog[c.id]||{completed:[]};
-  const lesson=c.lessons[currentLesson];
-  const lessonsHTML=c.lessons.map((l,i)=>`
-    <div class="lesson-item ${i===currentLesson?'active':''} ${cp.completed.includes(i)?'completed':''}" onclick="selectLesson(${i})">
-      <div class="li-num">${cp.completed.includes(i)?'✓':(i+1)}</div>
-      <div class="li-info"><div class="li-title">${l.title}</div><div class="li-dur">⏱ ${l.dur}</div></div>
-      <div class="li-type">📹</div>
-    </div>`).join('');
-  const videoHTML=`<div class="video-frame"><iframe src="https://www.youtube.com/embed/${lesson.yt}?rel=0" allowfullscreen></iframe></div>
-    <div class="lesson-title">${lesson.title}</div>
-    <div class="lesson-desc">Lezione ${currentLesson+1} di ${c.lessons.length} — ${lesson.dur}</div>
-    <div class="lesson-actions">
-      <button class="btn btn-primary btn-sm" onclick="markComplete()">✅ Segna come completata</button>
-      ${currentLesson<c.lessons.length-1?`<button class="btn btn-outline btn-sm" onclick="nextLesson()">Prossima →</button>`:''}
-    </div>`;
-  const materialsHTML=`<div class="materials-grid">${c.materials.map(m=>`<div class="material-item" onclick="window.open('${m.url}','_blank')"><div class="mat-icon pdf">📄</div><div class="mat-info"><div class="mat-name">${m.name}</div><div class="mat-size">${m.size}</div></div><button class="btn btn-outline btn-sm">⬇️ Scarica</button></div>`).join('')}</div>`;
-  const q=c.quiz[currentQuizQ];
-  const quizHTML=`<div class="quiz-card"><div class="quiz-progress"><span style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace;">Domanda ${currentQuizQ+1}/${c.quiz.length}</span><div class="quiz-prog-bar"><div class="quiz-prog-fill" style="width:${((currentQuizQ+1)/c.quiz.length)*100}%"></div></div></div><div class="quiz-q">${q.q}</div><div class="quiz-options">${q.opts.map((o,i)=>`<div class="quiz-opt" onclick="selectQuizOpt(${i})"><div class="quiz-opt-circle"></div>${o}</div>`).join('')}</div><button class="btn btn-primary" id="quizNextBtn" onclick="nextQuizQ()" style="display:none;">Prossima domanda →</button></div>`;
-  const tabsHTML=`<div class="tab-bar" style="padding:0 24px;border-bottom:2px solid #e8f0f8;margin-bottom:0;"><div class="tab ${tab==='video'?'active':''}" onclick="renderPlayer('video')">📹 Lezioni</div><div class="tab ${tab==='materials'?'active':''}" onclick="renderPlayer('materials')">📄 Materiali</div><div class="tab ${tab==='quiz'?'active':''}" onclick="renderPlayer('quiz')">✅ Quiz</div></div>`;
-  document.getElementById('playerContainer').innerHTML=`<div class="player-header"><button class="player-back" onclick="renderCourses()">←</button><div><div class="player-title">${c.icon} ${c.title}</div><div style="font-size:13px;color:var(--muted);margin-top:2px;">${c.lessons.length} lezioni · ${c.materials.length} materiali · ${c.quiz.length} quiz</div></div></div>${tabsHTML}<div class="player-layout"><div class="player-main">${tab==='video'?videoHTML:tab==='materials'?materialsHTML:quizHTML}</div><div class="player-sidebar"><div class="sidebar-course-title">Lezioni del corso</div>${lessonsHTML}</div></div>`;
+function filterCourses(q){
+  var cards = document.querySelectorAll('#appCoursesGrid .course-card');
+  for(var i=0; i<cards.length; i++){
+    cards[i].style.display = cards[i].textContent.toLowerCase().indexOf(q.toLowerCase()) >= 0 ? '' : 'none';
+  }
+}
+function filterByLevel(level, btn){
+  var btns = document.querySelectorAll('.filter-btn');
+  for(var i=0; i<btns.length; i++) btns[i].classList.remove('active');
+  btn.classList.add('active');
+  var cards = document.querySelectorAll('#appCoursesGrid .course-card');
+  for(var i=0; i<cards.length; i++){
+    cards[i].style.display = (level==='all' || cards[i].textContent.toLowerCase().indexOf(level) >= 0) ? '' : 'none';
+  }
+}
+
+function openCourse(id){
+  loadCourses(function(courses){
+    for(var i=0; i<courses.length; i++){
+      if(courses[i].id === id){ currentCourse=courses[i]; break; }
+    }
+    currentLesson=0; currentQuizQ=0; quizAnswers=[];
+    var lv = document.getElementById('courses-list-view');
+    var pv = document.getElementById('course-player-view');
+    if(lv) lv.classList.add('hidden');
+    if(pv) pv.classList.remove('hidden');
+    renderPlayer('video');
+  });
+}
+
+function renderPlayer(tab){
+  if(!currentCourse) return;
+  var c = currentCourse;
+  var prog = getProgress();
+  var cp = prog[c.id] || {completed:[]};
+  var lesson = c.lessons[currentLesson] || c.lessons[0];
+  if(!lesson) return;
+
+  var lessonsHTML = '';
+  for(var i=0; i<c.lessons.length; i++){
+    var l = c.lessons[i];
+    var isActive = i===currentLesson ? 'active' : '';
+    var isComp   = cp.completed.indexOf(i)>=0 ? 'completed' : '';
+    var numText  = cp.completed.indexOf(i)>=0 ? '✓' : (i+1);
+    lessonsHTML += '<div class="lesson-item '+isActive+' '+isComp+'" onclick="selectLesson('+i+')">';
+    lessonsHTML += '<div class="li-num">'+numText+'</div>';
+    lessonsHTML += '<div class="li-info"><div class="li-title">'+l.title+'</div><div class="li-dur">⏱ '+l.dur+'</div></div>';
+    lessonsHTML += '<div class="li-type">📹</div></div>';
+  }
+
+  var mainHTML = '';
+  if(tab==='video'){
+    mainHTML = '<div class="video-frame"><iframe src="https://www.youtube.com/embed/'+lesson.yt+'?rel=0" allowfullscreen></iframe></div>';
+    mainHTML += '<div class="lesson-title">'+lesson.title+'</div>';
+    mainHTML += '<div class="lesson-desc">Lezione '+(currentLesson+1)+' di '+c.lessons.length+' — '+lesson.dur+'</div>';
+    mainHTML += '<div class="lesson-actions">';
+    mainHTML += '<button class="btn btn-primary btn-sm" onclick="markComplete()">✅ Segna completata</button>';
+    if(currentLesson < c.lessons.length-1) mainHTML += '<button class="btn btn-outline btn-sm" onclick="nextLesson()">Prossima &rarr;</button>';
+    mainHTML += '</div>';
+  } else if(tab==='materials'){
+    mainHTML = '<div class="materials-grid">';
+    for(var i=0; i<c.materials.length; i++){
+      var m = c.materials[i];
+      mainHTML += '<div class="material-item"><div class="mat-icon">📄</div>';
+      mainHTML += '<div class="mat-info"><div class="mat-name">'+m.name+'</div><div class="mat-size">'+m.size+'</div></div>';
+      mainHTML += '<button class="btn btn-outline btn-sm">⬇️ Scarica</button></div>';
+    }
+    mainHTML += '</div>';
+  } else if(tab==='quiz'){
+    var q = c.quiz[currentQuizQ];
+    if(!q){ mainHTML='<p style="padding:20px;color:var(--muted);">Nessun quiz disponibile</p>'; }
+    else {
+      var pct = Math.round((currentQuizQ+1)/c.quiz.length*100);
+      mainHTML  = '<div class="quiz-card">';
+      mainHTML += '<div class="quiz-progress"><span style="font-size:13px;color:var(--muted);">Domanda '+(currentQuizQ+1)+'/'+c.quiz.length+'</span>';
+      mainHTML += '<div class="quiz-prog-bar"><div class="quiz-prog-fill" style="width:'+pct+'%"></div></div></div>';
+      mainHTML += '<div class="quiz-q">'+q.q+'</div><div class="quiz-options">';
+      for(var i=0; i<q.opts.length; i++){
+        mainHTML += '<div class="quiz-opt" onclick="selectQuizOpt('+i+')">';
+        mainHTML += '<div class="quiz-opt-circle"></div>'+q.opts[i]+'</div>';
+      }
+      mainHTML += '</div>';
+      mainHTML += '<button class="btn btn-primary" id="quizNextBtn" onclick="nextQuizQ()" style="display:none;">Prossima domanda &rarr;</button>';
+      mainHTML += '</div>';
+    }
+  }
+
+  var tabsHTML = '<div class="tab-bar" style="padding:0 24px;border-bottom:2px solid #f0f4f8;">';
+  tabsHTML += '<div class="tab '+(tab==='video'?'active':'')+'" onclick="renderPlayer(\'video\')">📹 Lezioni</div>';
+  tabsHTML += '<div class="tab '+(tab==='materials'?'active':'')+'" onclick="renderPlayer(\'materials\')">📄 Materiali</div>';
+  tabsHTML += '<div class="tab '+(tab==='quiz'?'active':'')+'" onclick="renderPlayer(\'quiz\')">✅ Quiz</div></div>';
+
+  var pc = document.getElementById('playerContainer');
+  if(!pc) return;
+
+  var html = '<div class="player-header">';
+  html += '<button class="player-back" onclick="renderCourses()">←</button>';
+  html += '<div><div class="player-title">'+c.icon+' '+c.title+'</div>';
+  html += '<div style="font-size:13px;color:var(--muted);margin-top:2px;">'+c.lessons.length+' lezioni · '+c.materials.length+' materiali · '+c.quiz.length+' quiz</div></div></div>';
+  html += tabsHTML;
+  html += '<div class="player-layout"><div class="player-main">'+mainHTML+'</div>';
+  html += '<div class="player-sidebar"><div class="sidebar-course-title">Lezioni</div>'+lessonsHTML+'</div></div>';
+  pc.innerHTML = html;
 }
 
 function selectLesson(i){ currentLesson=i; renderPlayer('video'); }
 function nextLesson(){ if(currentLesson<currentCourse.lessons.length-1){currentLesson++;renderPlayer('video');} }
 function markComplete(){
-  const prog=getProgress(); if(!prog[currentCourse.id]) prog[currentCourse.id]={completed:[]};
-  if(!prog[currentCourse.id].completed.includes(currentLesson)) prog[currentCourse.id].completed.push(currentLesson);
-  saveProgress(prog); renderPlayer('video');
+  var prog=getProgress();
+  if(!prog[currentCourse.id]) prog[currentCourse.id]={completed:[]};
+  if(prog[currentCourse.id].completed.indexOf(currentLesson)<0) prog[currentCourse.id].completed.push(currentLesson);
+  saveProgress(prog); renderPlayer('video'); toast('✅ Lezione completata!');
 }
 function selectQuizOpt(i){
-  const opts=document.querySelectorAll('.quiz-opt'); opts.forEach(o=>o.classList.remove('selected','correct','wrong'));
-  const q=currentCourse.quiz[currentQuizQ];
+  var opts = document.querySelectorAll('.quiz-opt');
+  for(var j=0; j<opts.length; j++) opts[j].classList.remove('selected','correct','wrong');
+  var q = currentCourse.quiz[currentQuizQ];
   opts[i].classList.add(i===q.correct?'correct':'wrong');
-  opts[i].querySelector('.quiz-opt-circle').textContent=i===q.correct?'✓':'✗';
+  opts[i].querySelector('.quiz-opt-circle').textContent = i===q.correct?'✓':'✗';
   if(i!==q.correct) opts[q.correct].classList.add('correct');
-  quizAnswers[currentQuizQ]=(i===q.correct);
-  document.getElementById('quizNextBtn').style.display='flex';
+  quizAnswers[currentQuizQ] = (i===q.correct);
+  var nb = document.getElementById('quizNextBtn');
+  if(nb) nb.style.display='flex';
 }
 function nextQuizQ(){
-  if(currentQuizQ<currentCourse.quiz.length-1){ currentQuizQ++; renderPlayer('quiz'); }
-  else {
-    const score=Math.round(quizAnswers.filter(Boolean).length/currentCourse.quiz.length*100);
-    const prog=getProgress(); if(!prog[currentCourse.id]) prog[currentCourse.id]={completed:[]};
-    prog[currentCourse.id].quizScore=score; saveProgress(prog);
-    document.querySelector('.quiz-card').innerHTML=`<div style="text-align:center;padding:40px 20px;"><div style="font-size:80px;margin-bottom:20px;">${score>=70?'🏆':'📚'}</div><div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:900;margin-bottom:8px;">${score}%</div><div style="font-size:18px;color:var(--muted);margin-bottom:24px;">${score>=70?'Ottimo lavoro! Quiz superato.':'Riprova — minimo 70% per passare.'}</div><button class="btn btn-primary" onclick="currentQuizQ=0;quizAnswers=[];renderPlayer('quiz')">🔄 Rifai il quiz</button></div>`;
+  if(currentQuizQ < currentCourse.quiz.length-1){ currentQuizQ++; renderPlayer('quiz'); return; }
+  var correct = 0;
+  for(var i=0; i<quizAnswers.length; i++) if(quizAnswers[i]) correct++;
+  var score = Math.round(correct/currentCourse.quiz.length*100);
+  var prog=getProgress();
+  if(!prog[currentCourse.id]) prog[currentCourse.id]={completed:[]};
+  prog[currentCourse.id].quizScore = score;
+  saveProgress(prog);
+  var qc = document.querySelector('.quiz-card');
+  if(qc){
+    qc.innerHTML = '<div style="text-align:center;padding:40px 20px;">'
+      +'<div style="font-size:80px;margin-bottom:20px;">'+(score>=70?'🏆':'📚')+'</div>'
+      +'<div style="font-family:Playfair Display,serif;font-size:36px;font-weight:900;margin-bottom:8px;">'+score+'%</div>'
+      +'<div style="font-size:16px;color:var(--muted);margin-bottom:24px;">'+(score>=70?'Ottimo! Quiz superato.':'Riprova - minimo 70%')+'</div>'
+      +'<button class="btn btn-primary" onclick="currentQuizQ=0;quizAnswers=[];renderPlayer(\'quiz\')">🔄 Rifai</button></div>';
   }
 }
 
-// ══════════════════════
+// ============================================================
 // ADMIN
-// ══════════════════════
-async function renderAdmin(){
-  const courses = await loadCourses();
-  const tbody=document.getElementById('adminCourseTable');
-  // Get enrollment counts
-  let enrollCounts={};
-  try { const res=await api('GET','collections/enrollments/records?perPage=200'); res.items.forEach(e=>{ enrollCounts[e.course]=(enrollCounts[e.course]||0)+1; }); } catch(e){}
-  tbody.innerHTML=courses.map((c)=>`<tr>
-    <td><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">${c.icon}</span><div style="font-weight:600;">${c.title}</div></div></td>
-    <td><span class="badge ${c.level==='base'?'badge-blue':c.level==='intermedio'?'badge-yellow':'badge-red'}">${c.level}</span></td>
-    <td>${c.lessons.length}</td>
-    <td>${enrollCounts[c.id]||0}</td>
-    <td><span class="badge ${c.status==='disponibile'?'badge-green':'badge-yellow'}">${c.status}</span></td>
-    <td><div style="display:flex;gap:8px;">
-      <button class="btn btn-outline btn-sm" onclick="editCourseAdmin('${c.id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteCourse('${c.id}')">🗑️</button>
-    </div></td>
-  </tr>`).join('');
+// ============================================================
+function renderAdmin(){
+  loadCourses(function(courses){
+    var tbody = document.getElementById('adminCourseTable');
+    if(!tbody) return;
+    var html = '';
+    for(var i=0; i<courses.length; i++){
+      var c = courses[i];
+      var lc = c.level==='base'?'badge-blue':c.level==='intermedio'?'badge-yellow':'badge-red';
+      var sc = c.status==='disponibile'?'badge-green':'badge-yellow';
+      html += '<tr><td><div style="display:flex;align-items:center;gap:12px;">';
+      html += '<span style="font-size:24px;">'+c.icon+'</span>';
+      html += '<span style="font-weight:600;">'+c.title+'</span></div></td>';
+      html += '<td><span class="badge '+lc+'">'+c.level+'</span></td>';
+      html += '<td>'+c.lessons.length+'</td>';
+      html += '<td>—</td>';
+      html += '<td><span class="badge '+sc+'">'+c.status+'</span></td>';
+      html += '<td><div style="display:flex;gap:8px;">';
+      html += '<button class="btn btn-outline btn-sm" onclick="editCourseAdmin(\''+c.id+'\')">✏️</button>';
+      html += '<button class="btn btn-danger btn-sm" onclick="deleteCourse(\''+c.id+'\')">🗑️</button>';
+      html += '</div></td></tr>';
+    }
+    tbody.innerHTML = html;
+  });
 }
-
-async function renderUsers(){
-  const tbody=document.getElementById('usersTable');
-  tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);">⏳ Caricamento...</td></tr>';
-  try {
-    const res=await api('GET','collections/users/records?perPage=100&sort=-created');
-    tbody.innerHTML=res.items.map(u=>`<tr>
-      <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">${(u.full_name||u.email).substring(0,2).toUpperCase()}</div><span style="font-weight:600;">${u.full_name||'—'}</span></div></td>
-      <td>${u.email}</td>
-      <td>${u.profile_type||'—'}</td>
-      <td><span class="badge ${u.role==='admin'?'badge-red':'badge-blue'}">${u.role==='admin'?'Admin':'Studente'}</span></td>
-      <td>${new Date(u.created).toLocaleDateString('it-IT')}</td>
-      <td>${u.role!=='admin'?`<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑️</button>`:'—'}</td>
-    </tr>`).join('');
-  } catch(e){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">⚠️ Configura PocketBase per vedere gli utenti</td></tr>'; }
+function renderUsers(){
+  var tbody = document.getElementById('usersTable');
+  if(!tbody) return;
+  var users = getOfflineUsers();
+  var admin = {name:'Admin Academy',email:'admin@plcveronaacademy.it',role:'admin',profile:'Admin',date:'—'};
+  var all = [admin].concat(users);
+  var html = '';
+  for(var i=0; i<all.length; i++){
+    var u = all[i];
+    var initials = u.name.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+    var rc = u.role==='admin'?'badge-red':'badge-blue';
+    html += '<tr>';
+    html += '<td><div style="display:flex;align-items:center;gap:10px;">';
+    html += '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00c6ff,#0060cc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">'+initials+'</div>';
+    html += '<span style="font-weight:600;">'+u.name+'</span></div></td>';
+    html += '<td>'+u.email+'</td>';
+    html += '<td>'+(u.profile||'—')+'</td>';
+    html += '<td><span class="badge '+rc+'">'+(u.role==='admin'?'Admin':'Studente')+'</span></td>';
+    html += '<td>'+(u.date||'—')+'</td>';
+    html += '<td>'+(u.role!=='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteUser(\''+u.email+'\')">🗑️</button>':'—')+'</td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);">Nessun utente registrato</td></tr>';
 }
-
-async function deleteUser(id){
+function deleteUser(email){
   if(!confirm('Rimuovere questo utente?')) return;
-  try { await api('DELETE','collections/users/records/'+id); renderUsers(); } catch(e){ alert('Errore: '+e.message); }
+  var users = getOfflineUsers().filter(function(u){ return u.email!==email; });
+  saveOfflineUsers(users);
+  renderUsers();
+  toast('Utente rimosso','info');
 }
-
-async function deleteCourse(id){
+function deleteCourse(id){
   if(!confirm('Eliminare questo corso?')) return;
-  try { await api('DELETE','collections/courses/records/'+id); cachedCourses=null; renderAdmin(); } catch(e){ alert('Errore: '+e.message); }
+  cachedCourses = null;
+  if(PB_URL && pbToken){
+    fetch(PB_URL+'/api/collections/courses/records/'+id,{method:'DELETE',headers:{'Authorization':pbToken}})
+      .then(function(){ cachedCourses=null; renderAdmin(); toast('Corso eliminato'); })
+      .catch(function(){ toast('Errore eliminazione','error'); });
+  } else {
+    toast('Configura il backend per eliminare i corsi','warning');
+  }
 }
-
 function editCourseAdmin(id){
   switchAdminTab('add', document.querySelectorAll('#view-admin .tab')[1]);
-  const c=cachedCourses?.find(x=>x.id===id);
+  if(!cachedCourses) return;
+  var c = null;
+  for(var i=0; i<cachedCourses.length; i++) if(cachedCourses[i].id===id){ c=cachedCourses[i]; break; }
   if(!c) return;
-  document.getElementById('a-title').value=c.title;
-  document.getElementById('a-desc').value=c.description||c.desc;
-  document.getElementById('a-icon').value=c.icon;
-  document.getElementById('a-level').value=c.level;
-  document.getElementById('a-status').value=c.status;
-  document.getElementById('a-title').dataset.editId=id;
+  var at=document.getElementById('a-title');
+  var ad=document.getElementById('a-desc');
+  var ai=document.getElementById('a-icon');
+  var al=document.getElementById('a-level');
+  var as=document.getElementById('a-status');
+  if(at) at.value=c.title;
+  if(ad) ad.value=c.description||c.desc||'';
+  if(ai) ai.value=c.icon;
+  if(al) al.value=c.level;
+  if(as) as.value=c.status;
+  if(at) at.dataset.editId=id;
 }
+function saveCourse(){
+  var at=document.getElementById('a-title');
+  var ad=document.getElementById('a-desc');
+  var ai=document.getElementById('a-icon');
+  var al=document.getElementById('a-level');
+  var as=document.getElementById('a-status');
+  if(!at||!at.value.trim()){ showAlert('admin-alert','Inserisci il titolo del corso','error'); return; }
 
-async function saveCourse(){
-  const title=document.getElementById('a-title').value.trim();
-  const desc=document.getElementById('a-desc').value.trim();
-  const icon=document.getElementById('a-icon').value.trim();
-  const level=document.getElementById('a-level').value;
-  const status=document.getElementById('a-status').value;
-  if(!title){ showAlert('admin-alert','Inserisci il titolo del corso','error'); return; }
-
-  const lessons=[]; document.querySelectorAll('#lessons-list .lesson-row').forEach(row=>{
-    const inputs=row.querySelectorAll('input'); if(inputs[0].value.trim()){
-      const ytMatch=inputs[1].value.match(/(?:v=|youtu\.be\/)([^&?]+)/);
-      lessons.push({title:inputs[0].value.trim(),dur:'—',yt:ytMatch?ytMatch[1]:'dQw4w9WgXcQ'});
+  var lessons=[], materials=[], quiz=[];
+  var lr = document.querySelectorAll('#lessons-list .lesson-row');
+  for(var i=0; i<lr.length; i++){
+    var ins=lr[i].querySelectorAll('input');
+    if(ins[0]&&ins[0].value.trim()){
+      var yt='dQw4w9WgXcQ';
+      if(ins[1]&&ins[1].value){
+        var m=ins[1].value.match(/(?:v=|youtu\.be\/)([^&?]+)/);
+        if(m) yt=m[1];
+      }
+      lessons.push({title:ins[0].value.trim(),dur:'—',yt:yt});
     }
-  });
-  const materials=[]; document.querySelectorAll('#materials-list .material-row').forEach(row=>{
-    const inputs=row.querySelectorAll('input'); if(inputs[0].value.trim()) materials.push({name:inputs[0].value.trim(),size:'—',url:inputs[1].value||'#',type:'pdf'});
-  });
-  const quiz=[]; document.querySelectorAll('#quiz-list .quiz-row').forEach(row=>{
-    const q=row.querySelector('input[placeholder*="Domanda"]')?.value.trim();
-    const opts=[...row.querySelectorAll('.quiz-opt-input')].map(i=>i.value.trim()).filter(Boolean);
-    if(q&&opts.length>=2) quiz.push({q,opts,correct:0});
-  });
-
-  const colors=['blue','teal','navy','blue'];
-  const payload={title,description:desc,icon,level,status,color:colors[(cachedCourses?.length||0)%colors.length],lessons:JSON.stringify(lessons),materials:JSON.stringify(materials),quiz:JSON.stringify(quiz)};
-
-  try {
-    const editId=document.getElementById('a-title').dataset.editId;
-    if(editId){ await api('PATCH','collections/courses/records/'+editId,payload); }
-    else { await api('POST','collections/courses/records',payload); }
-    cachedCourses=null;
-    showAlert('admin-alert','✅ Corso salvato!','success');
-    setTimeout(()=>{ switchAdminTab('list',document.querySelectorAll('#view-admin .tab')[0]); renderAdmin(); },1200);
-  } catch(e){
-    showAlert('admin-alert','⚠️ Salvato in locale (configura PocketBase per sincronizzare)','info');
-    cachedCourses=null; setTimeout(()=>{ switchAdminTab('list',document.querySelectorAll('#view-admin .tab')[0]); renderAdmin(); },1200);
   }
+  var mr=document.querySelectorAll('#materials-list .material-row');
+  for(var i=0; i<mr.length; i++){
+    var ins=mr[i].querySelectorAll('input');
+    if(ins[0]&&ins[0].value.trim()) materials.push({name:ins[0].value.trim(),size:'—',url:ins[1]?ins[1].value:'#',type:'pdf'});
+  }
+  var qr=document.querySelectorAll('#quiz-list .quiz-row');
+  for(var i=0; i<qr.length; i++){
+    var qi=qr[i].querySelector('input[placeholder*="Domanda"]');
+    if(!qi||!qi.value.trim()) continue;
+    var oi=qr[i].querySelectorAll('.quiz-opt-input');
+    var opts=[];
+    for(var j=0; j<oi.length; j++) if(oi[j].value.trim()) opts.push(oi[j].value.trim());
+    if(opts.length>=2) quiz.push({q:qi.value.trim(),opts:opts,correct:0});
+  }
+
+  var payload = {
+    title:at.value.trim(), description:ad?ad.value.trim():'',
+    icon:ai?ai.value.trim():'⚙️', level:al?al.value:'base',
+    status:as?as.value:'disponibile', color:'blue',
+    lessons:JSON.stringify(lessons), materials:JSON.stringify(materials), quiz:JSON.stringify(quiz)
+  };
+
+  // Save locally first
+  if(!cachedCourses) cachedCourses = [];
+  var editId = at.dataset.editId;
+  if(editId){
+    for(var i=0; i<cachedCourses.length; i++){
+      if(cachedCourses[i].id===editId){
+        cachedCourses[i]=Object.assign({},payload,{id:editId,lessons:lessons,materials:materials,quiz:quiz,desc:payload.description}); break;
+      }
+    }
+  } else {
+    var newC=Object.assign({},payload,{id:'c'+Date.now(),lessons:lessons,materials:materials,quiz:quiz,desc:payload.description});
+    cachedCourses.push(newC);
+  }
+
+  showAlert('admin-alert','✅ Corso salvato!','success');
+  setTimeout(function(){
+    switchAdminTab('list',document.querySelectorAll('#view-admin .tab')[0]);
+    renderAdmin();
+  },1200);
+
+  // Try PocketBase
+  if(PB_URL && pbToken){
+    var method = editId ? 'PATCH' : 'POST';
+    var url    = PB_URL+'/api/collections/courses/records'+(editId?'/'+editId:'');
+    fetch(url,{method:method,headers:{'Content-Type':'application/json','Authorization':pbToken},body:JSON.stringify(payload)})
+      .then(function(){ cachedCourses=null; })
+      .catch(function(){});
+  }
+  if(at) at.dataset.editId='';
 }
 
 function switchAdminTab(tab,btn){
-  document.querySelectorAll('#view-admin .tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('#view-admin .tab-content').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active'); document.getElementById('admin-'+tab).classList.add('active');
+  var tabs=document.querySelectorAll('#view-admin .tab');
+  var contents=document.querySelectorAll('#view-admin .tab-content');
+  for(var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  for(var i=0; i<contents.length; i++) contents[i].classList.remove('active');
+  if(btn) btn.classList.add('active');
+  var tc=document.getElementById('admin-'+tab);
+  if(tc) tc.classList.add('active');
 }
-function addLessonRow(){ const row=document.createElement('div'); row.className='lesson-row'; row.style='display:grid;grid-template-columns:2fr 2fr auto;gap:12px;margin-bottom:12px;'; row.innerHTML=`<input type="text" class="form-control" placeholder="Titolo lezione" style="margin:0;"/><input type="text" class="form-control" placeholder="Link YouTube" style="margin:0;"/><button class="btn btn-danger btn-sm" onclick="removeRow(this)">✕</button>`; document.getElementById('lessons-list').appendChild(row); }
-function addMaterialRow(){ const row=document.createElement('div'); row.className='material-row'; row.style='display:grid;grid-template-columns:2fr 2fr auto;gap:12px;margin-bottom:12px;'; row.innerHTML=`<input type="text" class="form-control" placeholder="Nome file" style="margin:0;"/><input type="text" class="form-control" placeholder="URL download" style="margin:0;"/><button class="btn btn-danger btn-sm" onclick="removeRow(this)">✕</button>`; document.getElementById('materials-list').appendChild(row); }
-function addQuizRow(){ const row=document.createElement('div'); row.className='quiz-row'; row.style='background:var(--lighter);border-radius:12px;padding:16px;margin-bottom:12px;'; row.innerHTML=`<div class="form-group" style="margin-bottom:12px;"><label>Domanda</label><input type="text" class="form-control" placeholder="es. Quale linguaggio..."/></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;"><input type="text" class="form-control quiz-opt-input" placeholder="Risposta A (corretta)" style="border-color:var(--success);"/><input type="text" class="form-control quiz-opt-input" placeholder="Risposta B"/><input type="text" class="form-control quiz-opt-input" placeholder="Risposta C"/><input type="text" class="form-control quiz-opt-input" placeholder="Risposta D"/></div><div style="display:flex;justify-content:space-between;"><div style="font-size:12px;color:var(--muted);">💡 La prima risposta è quella corretta</div><button class="btn btn-danger btn-sm" onclick="this.closest('.quiz-row').remove()">✕ Rimuovi</button></div>`; document.getElementById('quiz-list').appendChild(row); }
-function removeRow(btn){ btn.closest('.lesson-row,.material-row,.quiz-row')?.remove(); }
+function addLessonRow(){
+  var row=document.createElement('div'); row.className='lesson-row';
+  row.style.cssText='display:grid;grid-template-columns:2fr 2fr auto;gap:12px;margin-bottom:12px;';
+  row.innerHTML='<input type="text" class="form-control" placeholder="Titolo lezione" style="margin:0;"/>'
+    +'<input type="text" class="form-control" placeholder="Link YouTube" style="margin:0;"/>'
+    +'<button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>';
+  var ll=document.getElementById('lessons-list'); if(ll) ll.appendChild(row);
+}
+function addMaterialRow(){
+  var row=document.createElement('div'); row.className='material-row';
+  row.style.cssText='display:grid;grid-template-columns:2fr 2fr auto;gap:12px;margin-bottom:12px;';
+  row.innerHTML='<input type="text" class="form-control" placeholder="Nome file" style="margin:0;"/>'
+    +'<input type="text" class="form-control" placeholder="URL download" style="margin:0;"/>'
+    +'<button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>';
+  var ml=document.getElementById('materials-list'); if(ml) ml.appendChild(row);
+}
+function addQuizRow(){
+  var row=document.createElement('div'); row.className='quiz-row';
+  row.style.cssText='background:var(--lighter);border-radius:12px;padding:16px;margin-bottom:12px;';
+  row.innerHTML='<div class="form-group" style="margin-bottom:12px;"><label>Domanda</label>'
+    +'<input type="text" class="form-control" placeholder="es. Quale linguaggio..."/></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+    +'<input type="text" class="form-control quiz-opt-input" placeholder="Risposta A (corretta)" style="border-color:var(--success);"/>'
+    +'<input type="text" class="form-control quiz-opt-input" placeholder="Risposta B"/>'
+    +'<input type="text" class="form-control quiz-opt-input" placeholder="Risposta C"/>'
+    +'<input type="text" class="form-control quiz-opt-input" placeholder="Risposta D"/></div>'
+    +'<button class="btn btn-danger btn-sm" onclick="this.closest(\'.quiz-row\').remove()">✕ Rimuovi</button>';
+  var ql=document.getElementById('quiz-list'); if(ql) ql.appendChild(row);
+}
+function removeRow(btn){ var r=btn.closest?btn.closest('.lesson-row,.material-row,.quiz-row'):btn.parentElement; if(r) r.remove(); }
 
-// ══════════════════════
+// ============================================================
 // PROFILE
-// ══════════════════════
-async function saveProfile(){
-  const name=document.getElementById('profile-name-input').value.trim();
-  if(!name) return;
-  try {
-    await api('PATCH','collections/users/records/'+currentUser.id,{full_name:name});
-    currentUser.name=name;
-    localStorage.setItem('pva_user',JSON.stringify(currentUser));
-  } catch(e){}
-  ['profileName','sidebarName'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=name; });
-  document.getElementById('welcomeName').textContent=name.split(' ')[0];
-  const initials=name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-  ['profileAvatar','sidebarAvatar','topbarAvatar'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=initials; });
-  alert('✅ Profilo salvato!');
+// ============================================================
+function saveProfile(){
+  var ni=document.getElementById('profile-name-input');
+  if(!ni||!ni.value.trim()) return;
+  var name=ni.value.trim();
+  currentUser.name=name;
+  var users=getOfflineUsers();
+  for(var i=0; i<users.length; i++){
+    if(users[i].email===currentUser.email){ users[i].name=name; break; }
+  }
+  saveOfflineUsers(users);
+  localStorage.setItem('pva_user',JSON.stringify(currentUser));
+  var pn=document.getElementById('profileName');
+  var sn=document.getElementById('sidebarName');
+  var wn=document.getElementById('welcomeName');
+  if(pn) pn.textContent=name;
+  if(sn) sn.textContent=name;
+  if(wn) wn.textContent=name.split(' ')[0];
+  var initials=name.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+  var ids=['profileAvatar','sidebarAvatar','topbarAvatar'];
+  for(var i=0; i<ids.length; i++){ var el=document.getElementById(ids[i]); if(el) el.textContent=initials; }
+  toast('✅ Profilo salvato!');
 }
 
-// ══════════════════════
-// LIVE CHAT (realtime poll)
-// ══════════════════════
-async function initLiveChat(){
-  await loadChatMessages();
-  if(chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval=setInterval(loadChatMessages, 3000);
+// ============================================================
+// LIVE CHAT
+// ============================================================
+function initLiveChat(){
+  if(PB_URL&&PB_URL.length>10){ loadChatMessages(); chatPollInt=setInterval(loadChatMessages,4000); }
 }
-async function loadChatMessages(){
-  try {
-    const res=await api('GET','collections/chat_messages/records?perPage=50&sort=created&expand=user');
-    const container=document.getElementById('chatMessages');
-    if(!container) return;
-    const msgs=res.items;
-    if(msgs.length===0) return;
-    container.innerHTML=msgs.map(m=>`<div class="chat-msg">
-      <div class="chat-avatar">${(m.user_name||'??').substring(0,2).toUpperCase()}</div>
-      <div class="chat-bubble"><div class="chat-name">${m.user_name}</div><div class="chat-text">${m.message}</div></div>
-    </div>`).join('');
+function loadChatMessages(){
+  if(!PB_URL||PB_URL.length<10) return;
+  fetch(PB_URL+'/api/collections/chat_messages/records?perPage=50&sort=created',{
+    headers:pbToken?{'Authorization':pbToken}:{}
+  }).then(function(r){return r.json();}).then(function(res){
+    var container=document.getElementById('chatMessages');
+    if(!container||!res.items||!res.items.length) return;
+    var html='';
+    for(var i=0; i<res.items.length; i++){
+      var m=res.items[i];
+      var av=(m.user_name||'??').substring(0,2).toUpperCase();
+      html+='<div class="chat-msg"><div class="chat-avatar">'+av+'</div>';
+      html+='<div class="chat-bubble"><div class="chat-name">'+m.user_name+'</div>';
+      html+='<div class="chat-text">'+m.message+'</div></div></div>';
+    }
+    container.innerHTML=html;
     container.scrollTop=container.scrollHeight;
-  } catch(e){}
+  }).catch(function(){});
 }
-async function sendChat(){
-  const input=document.getElementById('chatInput'); const msg=input.value.trim(); if(!msg) return;
+function sendChat(){
+  var input=document.getElementById('chatInput');
+  if(!input||!input.value.trim()) return;
+  var msg=input.value.trim();
   input.value='';
-  try {
-    await api('POST','collections/chat_messages/records',{user:currentUser.id,user_name:currentUser.name,message:msg,session:null});
-    await loadChatMessages();
-  } catch(e){
-    // Offline fallback
-    const initials=currentUser.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-    const container=document.getElementById('chatMessages');
-    container.insertAdjacentHTML('beforeend',`<div class="chat-msg"><div class="chat-avatar">${initials}</div><div class="chat-bubble"><div class="chat-name">${currentUser.name}</div><div class="chat-text">${msg}</div></div></div>`);
+  var initials=currentUser.name.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+  var container=document.getElementById('chatMessages');
+  if(container){
+    container.insertAdjacentHTML('beforeend',
+      '<div class="chat-msg"><div class="chat-avatar">'+initials+'</div>'
+      +'<div class="chat-bubble"><div class="chat-name">'+currentUser.name+'</div>'
+      +'<div class="chat-text">'+msg+'</div></div></div>');
     container.scrollTop=container.scrollHeight;
+  }
+  if(PB_URL&&pbToken){
+    fetch(PB_URL+'/api/collections/chat_messages/records',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':pbToken},
+      body:JSON.stringify({user:currentUser.id,user_name:currentUser.name,message:msg})
+    }).catch(function(){});
   }
 }
 
-// ══════════════════════
-// UTILITIES
-// ══════════════════════
-function showAlert(id,msg,type){ const el=document.getElementById(id); if(!el) return; if(!msg){el.innerHTML='';return;} el.innerHTML=`<div class="alert alert-${type}">${msg}</div>`; }
-function scrollTo(sel){ document.querySelector(sel)?.scrollIntoView({behavior:'smooth'}); }
-function toggleMobileNav(){ const links=document.querySelector('.nav-links'); if(links) links.style.display=links.style.display==='flex'?'none':'flex'; }
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
-function showBanner(msg){ let b=document.getElementById('pb-banner'); if(!b){b=document.createElement('div');b.id='pb-banner';b.style='position:fixed;top:72px;left:0;right:0;background:#f59e0b;color:#fff;text-align:center;padding:10px;font-size:13px;font-weight:600;z-index:999;';document.body.appendChild(b);} b.textContent=msg+' — Clicca per configurare URL';b.style.cursor='pointer';b.onclick=()=>{const url=prompt('Inserisci URL del tuo backend PocketBase su Render:',PB_URL);if(url){localStorage.setItem('pva_pb_url',url);location.reload();}}; }
-
-// ══════════════════════
-// CONFIG PANEL (admin)
-// ══════════════════════
-function showConfigPanel(){
-  const url=prompt('🔧 URL Backend PocketBase (es. https://plc-academy.onrender.com):',localStorage.getItem('pva_pb_url')||'');
-  if(url){ localStorage.setItem('pva_pb_url',url); alert('✅ URL salvato! Ricarica la pagina.'); location.reload(); }
-}
-
-// NAV scroll effect
-window.addEventListener('scroll',()=>{
-  document.getElementById('mainNav')?.classList.toggle('scrolled', window.scrollY>20);
-});
-
-// Close modal on overlay click
-document.getElementById('authModal')?.addEventListener('click',function(e){
-  if(e.target===this) closeModal();
-});
-
-// ══════════════════════
+// ============================================================
 // REVIEWS
-// ══════════════════════
-let selectedStars = 0;
-const DEFAULT_REVIEWS = [
-  {id:'r1',author_name:'Luca Ferrarini',author_role:'Tecnico automazione',course_name:'PLC Base — Siemens S7',stars:5,text:'Corso eccellente! Finalmente una formazione pratica su hardware reale. In poche settimane ho imparato più che in anni di teoria.',created:'2025-03-01'},
-  {id:'r2',author_name:'Sara Colombo',author_role:'Studentessa ingegneria',course_name:'SCADA / HMI WinCC',stars:5,text:'Chiarissimo e ben strutturato. Ho trovato lavoro subito dopo il corso.',created:'2025-02-15'},
-  {id:'r3',author_name:'Marco Bianchi',author_role:'Elettricista industriale',course_name:'PLC Base — Siemens S7',stars:5,text:'Venivo dal mondo elettrico. Ora programmo PLC Siemens in autonomia. Incredibile.',created:'2025-01-20'},
-  {id:'r4',author_name:'Giulia Martini',author_role:'Ingegnere di processo',course_name:'SCADA / HMI WinCC',stars:4,text:'Ottimi contenuti. Le dirette live sono il valore aggiunto — poter fare domande in tempo reale è preziosissimo.',created:'2025-04-01'},
-  {id:'r5',author_name:'Andrea Russo',author_role:'Tecnico manutenzione',course_name:'PLC Base — Siemens S7',stars:5,text:'Adesso mi sento sicuro nel gestire i PLC in azienda. Consiglio a tutti.',created:'2025-03-10'},
-  {id:'r6',author_name:'Valentina Ricci',author_role:'Neolaureata automazione',course_name:'Automazione + AI',stars:5,text:'Il corso sull AI applicata è visionario. Finalmente PLC e futuro insieme.',created:'2025-04-05'},
-];
-
+// ============================================================
 function setStars(n){
   selectedStars=n;
-  document.querySelectorAll('#starPicker .sp-star').forEach((s,i)=>s.classList.toggle('lit',i<n));
-  const labels=['','⭐ Pessimo','⭐⭐ Scarso','⭐⭐⭐ Nella media','⭐⭐⭐⭐ Buono','⭐⭐⭐⭐⭐ Eccellente!'];
-  document.getElementById('starLabel').textContent=labels[n];
+  var stars=document.querySelectorAll('#starPicker .sp-star');
+  for(var i=0; i<stars.length; i++) stars[i].classList.toggle('lit',i<n);
+  var labels=['','⭐ Pessimo','⭐⭐ Scarso','⭐⭐⭐ Nella media','⭐⭐⭐⭐ Buono','⭐⭐⭐⭐⭐ Eccellente!'];
+  var sl=document.getElementById('starLabel'); if(sl) sl.textContent=labels[n];
 }
-
-async function loadReviews(){
-  try {
-    const res=await api('GET','collections/reviews/records?perPage=100&sort=-created',null,false);
-    return res.items;
-  } catch(e){
-    const local=JSON.parse(localStorage.getItem('pva_reviews_local')||'[]');
-    return [...DEFAULT_REVIEWS,...local];
-  }
-}
-
-async function submitReview(){
-  const course=document.getElementById('rv-course').value;
-  const text=document.getElementById('rv-text').value.trim();
+function submitReview(){
+  var rc=document.getElementById('rv-course');
+  var rt=document.getElementById('rv-text');
+  var course=rc?rc.value:'';
+  var text  =rt?rt.value.trim():'';
   if(!course){ showAlert('review-alert','Seleziona un corso','error'); return; }
   if(!selectedStars){ showAlert('review-alert','Seleziona una valutazione','error'); return; }
   if(text.length<20){ showAlert('review-alert','Scrivi almeno 20 caratteri','error'); return; }
-  try {
-    await api('POST','collections/reviews/records',{author:currentUser.id,author_name:currentUser.name,author_role:currentUser.profile||'Studente',course_name:course,stars:selectedStars,text});
-    showAlert('review-alert','✅ Recensione pubblicata!','success');
-  } catch(e){
-    const offline=JSON.parse(localStorage.getItem('pva_reviews_local')||'[]');
-    offline.unshift({id:'l'+Date.now(),author_name:currentUser.name,author_role:currentUser.profile||'Studente',course_name:course,stars:selectedStars,text,created:new Date().toISOString()});
-    localStorage.setItem('pva_reviews_local',JSON.stringify(offline));
-    showAlert('review-alert','✅ Recensione salvata!','success');
-  }
-  document.getElementById('rv-text').value='';
-  document.getElementById('rv-course').value='';
+  var reviews=getOfflineReviews();
+  reviews.unshift({id:'l'+Date.now(),author_name:currentUser.name,author_role:currentUser.profile||'Studente',course_name:course,stars:selectedStars,text:text,created:new Date().toISOString()});
+  localStorage.setItem('pva_reviews_local',JSON.stringify(reviews));
+  showAlert('review-alert','✅ Recensione pubblicata!','success');
+  if(rc) rc.value=''; if(rt) rt.value='';
   selectedStars=0;
-  document.querySelectorAll('#starPicker .sp-star').forEach(s=>s.classList.remove('lit'));
-  document.getElementById('starLabel').textContent='Clicca per valutare';
+  var sps=document.querySelectorAll('#starPicker .sp-star');
+  for(var i=0; i<sps.length; i++) sps[i].classList.remove('lit');
+  var sl=document.getElementById('starLabel'); if(sl) sl.textContent='Clicca per valutare';
   renderReviews(); renderLandingReviews();
-}
-
-async function renderReviews(){
-  const sel=document.getElementById('rv-course');
-  if(sel&&sel.options.length<=1){ const courses=await loadCourses(); courses.forEach(c=>{const o=document.createElement('option');o.value=c.title;o.textContent=c.title;sel.appendChild(o);}); }
-  const reviews=await loadReviews();
-  const grid=document.getElementById('appReviewsGrid');
-  if(!grid) return;
-  grid.innerHTML=reviews.map(r=>`
-    <div class="review-card">
-      <div class="review-course-tag">${r.course_name}</div>
-      <div class="review-stars">${'⭐'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
-      <div class="review-text">"${r.text}"</div>
-      <div class="review-author">
-        <div class="review-avatar">${(r.author_name||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div>
-        <div class="review-author-info"><div class="ra-name">${r.author_name}</div><div class="ra-role">${r.author_role||'Studente'} · ${new Date(r.created).toLocaleDateString('it-IT',{month:'long',year:'numeric'})}</div></div>
-      </div>
-    </div>`).join('');
-}
-
-async function renderLandingReviews(){
-  const reviews=await loadReviews();
-  const grid=document.getElementById('landingReviewsGrid');
-  if(!grid) return;
-  grid.innerHTML=reviews.slice(0,6).map(r=>`
-    <div class="review-card">
-      <div class="review-course-tag">${r.course_name}</div>
-      <div class="review-stars">${'⭐'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
-      <div class="review-text">"${r.text}"</div>
-      <div class="review-author">
-        <div class="review-avatar">${(r.author_name||'??').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div>
-        <div class="review-author-info"><div class="ra-name">${r.author_name}</div><div class="ra-role">${r.author_role||'Studente'}</div></div>
-      </div>
-    </div>`).join('');
-  if(reviews.length){
-    const avg=(reviews.reduce((a,r)=>a+r.stars,0)/reviews.length).toFixed(1);
-    const el=document.getElementById('landingAvgNum'); if(el) el.textContent=avg;
-    const cnt=document.getElementById('landingRatingCount'); if(cnt) cnt.textContent=`Basato su ${reviews.length} recension${reviews.length===1?'e':'i'}`;
-    const bars=document.querySelectorAll('.rating-bar-fg');
-    if(bars.length>=5){ for(let s=5;s>=1;s--){ const pct=Math.round(reviews.filter(r=>r.stars===s).length/reviews.length*100); bars[5-s].style.width=pct+'%'; } }
+  if(PB_URL&&pbToken){
+    fetch(PB_URL+'/api/collections/reviews/records',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':pbToken},
+      body:JSON.stringify({author:currentUser.id,author_name:currentUser.name,author_role:currentUser.profile||'Studente',course_name:course,stars:selectedStars,text:text})
+    }).catch(function(){});
   }
 }
-
-// Init landing reviews
-renderLandingReviews();
-
-// ══════════════════════
-// TOAST NOTIFICATIONS
-// ══════════════════════
-function toast(msg, type='success', duration=3500){
-  let container = document.getElementById('toast-container');
-  if(!container){
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.style = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
-    document.body.appendChild(container);
+function getReviews(callback){
+  var local=getOfflineReviews();
+  if(PB_URL&&PB_URL.length>10){
+    fetch(PB_URL+'/api/collections/reviews/records?perPage=100&sort=-created')
+      .then(function(r){return r.json();}).then(function(res){
+        callback(res.items&&res.items.length?res.items:DEFAULT_REVIEWS.concat(local));
+      }).catch(function(){ callback(DEFAULT_REVIEWS.concat(local)); });
+  } else {
+    callback(DEFAULT_REVIEWS.concat(local));
   }
-  const t = document.createElement('div');
-  const colors = {success:'#00b86b',error:'#ef4444',info:'#0060cc',warning:'#f59e0b'};
-  const icons  = {success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
-  t.style = `background:#fff;border-left:4px solid ${colors[type]||colors.success};border-radius:10px;padding:14px 18px;font-size:14px;font-weight:500;color:#0a1628;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px;min-width:280px;max-width:360px;animation:slideInToast .25s ease;`;
-  t.innerHTML = `<span>${icons[type]||'✅'}</span><span style="flex:1;">${msg}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:0 0 0 8px;">×</button>`;
-  container.appendChild(t);
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(20px)'; t.style.transition='all .3s'; setTimeout(()=>t.remove(),300); }, duration);
 }
-
-// ══════════════════════
-// CONNECTION STATUS
-// ══════════════════════
-let pbConnected = false;
-async function checkConnection(){
-  try {
-    await fetch(PB_URL+'/api/health', {signal: AbortSignal.timeout(5000)});
-    if(!pbConnected){
-      pbConnected = true;
-      const banner = document.getElementById('offline-banner');
-      if(banner) banner.remove();
+function buildReviewCard(r){
+  var stars=''; for(var i=0;i<r.stars;i++) stars+='⭐'; for(var i=r.stars;i<5;i++) stars+='☆';
+  var av=(r.author_name||'??').split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+  var date=''; try{ date=new Date(r.created).toLocaleDateString('it-IT',{month:'long',year:'numeric'}); }catch(e){}
+  return '<div class="review-card"><div class="review-course-tag">'+(r.course_name||r.course||'')+'</div>'
+    +'<div class="review-stars">'+stars+'</div>'
+    +'<div class="review-text">"'+r.text+'"</div>'
+    +'<div class="review-author"><div class="review-avatar">'+av+'</div>'
+    +'<div class="review-author-info"><div class="ra-name">'+(r.author_name||'')+'</div>'
+    +'<div class="ra-role">'+(r.author_role||'Studente')+(date?' · '+date:'')+'</div></div></div></div>';
+}
+function renderReviews(){
+  var sel=document.getElementById('rv-course');
+  if(sel&&sel.options.length<=1){
+    loadCourses(function(courses){
+      for(var i=0;i<courses.length;i++){
+        var o=document.createElement('option'); o.value=courses[i].title; o.textContent=courses[i].title; sel.appendChild(o);
+      }
+    });
+  }
+  getReviews(function(reviews){
+    var grid=document.getElementById('appReviewsGrid');
+    if(!grid) return;
+    var html=''; for(var i=0;i<reviews.length;i++) html+=buildReviewCard(reviews[i]);
+    grid.innerHTML=html||'<p style="color:var(--muted);padding:20px;">Nessuna recensione ancora.</p>';
+  });
+}
+function renderLandingReviews(){
+  getReviews(function(reviews){
+    var grid=document.getElementById('landingReviewsGrid');
+    if(!grid) return;
+    var html=''; var show=reviews.slice(0,6);
+    for(var i=0;i<show.length;i++) html+=buildReviewCard(show[i]);
+    grid.innerHTML=html;
+    if(reviews.length){
+      var sum=0; for(var i=0;i<reviews.length;i++) sum+=reviews[i].stars;
+      var avg=(sum/reviews.length).toFixed(1);
+      var an=document.getElementById('landingAvgNum'); if(an) an.textContent=avg;
+      var rc=document.getElementById('landingRatingCount');
+      if(rc) rc.textContent='Basato su '+reviews.length+' recension'+(reviews.length===1?'e':'i');
+      var bars=document.querySelectorAll('.rating-bar-fg');
+      if(bars.length>=5){
+        for(var s=5;s>=1;s--){
+          var cnt=0; for(var i=0;i<reviews.length;i++) if(reviews[i].stars===s) cnt++;
+          var pct=Math.round(cnt/reviews.length*100);
+          bars[5-s].style.width=pct+'%';
+        }
+      }
     }
-  } catch(e){
-    if(pbConnected || !document.getElementById('offline-banner')){
-      pbConnected = false;
-      showOfflineBanner();
-    }
-  }
-}
-function showOfflineBanner(){
-  if(document.getElementById('offline-banner')) return;
-  const b = document.createElement('div');
-  b.id = 'offline-banner';
-  b.style = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;z-index:10000;display:flex;align-items:center;justify-content:center;gap:12px;';
-  b.innerHTML = `<span>⚠️ Backend non raggiungibile — modalità offline</span>
-    <button onclick="showConfigPanel()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:700;">⚙️ Configura URL</button>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:18px;margin-left:8px;">×</button>`;
-  document.body.prepend(b);
+  });
 }
 
-// ══════════════════════
-// CONFIG PANEL (modal)
-// ══════════════════════
+// ============================================================
+// CONFIG PANEL
+// ============================================================
 function showConfigPanel(){
-  // Remove existing
-  document.getElementById('config-modal')?.remove();
-  const m = document.createElement('div');
-  m.id = 'config-modal';
-  m.style = 'position:fixed;inset:0;background:rgba(9,20,36,.75);backdrop-filter:blur(8px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
-  m.innerHTML = `
-    <div style="background:#fff;border-radius:20px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.3);">
-      <div style="background:linear-gradient(135deg,#091424,#162847);padding:28px 32px;position:relative;">
-        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00c6ff,#0072ff);"></div>
-        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:6px;">⚙️ Configurazione Backend</h2>
-        <p style="font-size:13px;color:rgba(255,255,255,.5);">Inserisci l'URL del tuo servizio PocketBase su Render</p>
-      </div>
-      <div style="padding:28px 32px;">
-        <div style="background:#f0f6fc;border-radius:12px;padding:16px 20px;margin-bottom:20px;font-size:13px;color:#3a6a8a;line-height:1.6;">
-          <strong>Come trovare l'URL:</strong><br/>
-          1. Vai su <strong>render.com</strong> → Dashboard<br/>
-          2. Apri il servizio <strong>plc-verona-academy-backend</strong><br/>
-          3. Copia l'URL nella sezione <strong>"Your service is live at"</strong>
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="display:block;font-size:13px;font-weight:700;color:#5a7a9a;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">URL Backend</label>
-          <input id="pb-url-input" type="url" value="${localStorage.getItem('pva_pb_url')||''}"
-            placeholder="https://plc-verona-academy-backend.onrender.com"
-            style="width:100%;padding:12px 16px;border:2px solid #e2eaf4;border-radius:10px;font-size:15px;outline:none;font-family:'JetBrains Mono',monospace;"/>
-        </div>
-        <div id="config-test-result" style="margin-bottom:16px;"></div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <button onclick="testPbConnection()" style="flex:1;padding:12px;background:#f0f6fc;border:2px solid #e2eaf4;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;color:#0060cc;">🔍 Testa connessione</button>
-          <button onclick="savePbUrl()" style="flex:1;padding:12px;background:linear-gradient(135deg,#0060cc,#0040aa);border:none;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;">💾 Salva e ricarica</button>
-        </div>
-        <button onclick="document.getElementById('config-modal').remove()" style="width:100%;margin-top:12px;padding:10px;background:none;border:none;font-size:14px;color:#aaa;cursor:pointer;">Annulla</button>
-      </div>
-    </div>`;
+  var existing=document.getElementById('config-modal');
+  if(existing) existing.remove();
+  var m=document.createElement('div');
+  m.id='config-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(9,20,36,.75);backdrop-filter:blur(8px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var currentUrl=localStorage.getItem('pva_pb_url')||'';
+  m.innerHTML='<div style="background:#fff;border-radius:20px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.3);">'
+    +'<div style="background:linear-gradient(135deg,#091424,#162847);padding:28px 32px;position:relative;">'
+    +'<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#00c6ff,#0072ff);"></div>'
+    +'<h2 style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px;">⚙️ Configura Backend</h2>'
+    +'<p style="font-size:13px;color:rgba(255,255,255,.5);">URL del tuo servizio PocketBase su Render</p></div>'
+    +'<div style="padding:28px 32px;">'
+    +'<div style="background:#f0f6fc;border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:13px;color:#3a6a8a;line-height:1.6;">'
+    +'Vai su <strong>render.com</strong> - apri il servizio - copia l\'URL che vedi</div>'
+    +'<div style="margin-bottom:16px;">'
+    +'<label style="display:block;font-size:12px;font-weight:700;color:#5a7a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">URL Backend</label>'
+    +'<input id="pb-url-input" type="url" value="'+currentUrl+'" placeholder="https://plc-verona-academy-backend.onrender.com" style="width:100%;padding:12px 16px;border:2px solid #e2eaf4;border-radius:10px;font-size:14px;outline:none;"/></div>'
+    +'<div id="config-test-result" style="margin-bottom:16px;"></div>'
+    +'<div style="display:flex;gap:12px;">'
+    +'<button onclick="testPbConn()" style="flex:1;padding:12px;background:#f0f6fc;border:2px solid #e2eaf4;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;color:#0060cc;">🔍 Testa</button>'
+    +'<button onclick="savePbUrl()" style="flex:1;padding:12px;background:linear-gradient(135deg,#0060cc,#0040aa);border:none;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;">💾 Salva</button>'
+    +'</div>'
+    +'<button onclick="document.getElementById(\'config-modal\').remove()" style="width:100%;margin-top:12px;padding:10px;background:none;border:none;font-size:14px;color:#aaa;cursor:pointer;">Annulla</button>'
+    +'</div></div>';
   document.body.appendChild(m);
-  m.addEventListener('click', e=>{ if(e.target===m) m.remove(); });
+  m.addEventListener('click',function(e){ if(e.target===m) m.remove(); });
 }
-async function testPbConnection(){
-  const url = document.getElementById('pb-url-input').value.trim();
-  const res  = document.getElementById('config-test-result');
-  if(!url){ res.innerHTML='<div style="color:#ef4444;font-size:13px;">⚠️ Inserisci un URL</div>'; return; }
-  res.innerHTML='<div style="color:#5a7a9a;font-size:13px;">⏳ Test in corso...</div>';
-  try {
-    const r = await fetch(url+'/api/health', {signal: AbortSignal.timeout(6000)});
-    if(r.ok) res.innerHTML='<div style="color:#00b86b;font-size:13px;font-weight:600;">✅ Connessione riuscita! PocketBase online.</div>';
-    else      res.innerHTML='<div style="color:#ef4444;font-size:13px;">❌ Errore risposta ('+r.status+')</div>';
-  } catch(e){
-    res.innerHTML='<div style="color:#ef4444;font-size:13px;">❌ Non raggiungibile — controlla URL e Render.</div>';
-  }
+function testPbConn(){
+  var url=document.getElementById('pb-url-input').value.trim();
+  var res=document.getElementById('config-test-result');
+  if(!url){ if(res) res.innerHTML='<div style="color:#ef4444;font-size:13px;">Inserisci un URL</div>'; return; }
+  if(res) res.innerHTML='<div style="color:#5a7a9a;font-size:13px;">Connessione in corso...</div>';
+  fetch(url+'/api/health').then(function(r){
+    if(r.ok){ if(res) res.innerHTML='<div style="color:#00b86b;font-size:13px;font-weight:600;">✅ Backend online!</div>'; }
+    else     { if(res) res.innerHTML='<div style="color:#ef4444;font-size:13px;">❌ Errore risposta</div>'; }
+  }).catch(function(){
+    if(res) res.innerHTML='<div style="color:#ef4444;font-size:13px;">❌ Non raggiungibile</div>';
+  });
 }
 function savePbUrl(){
-  const url = document.getElementById('pb-url-input').value.trim();
+  var url=document.getElementById('pb-url-input').value.trim();
   if(!url) return;
-  localStorage.setItem('pva_pb_url', url);
-  toast('✅ URL salvato! Ricaricamento...','success');
-  setTimeout(()=>location.reload(), 1200);
+  localStorage.setItem('pva_pb_url',url);
+  PB_URL=url;
+  var m=document.getElementById('config-modal'); if(m) m.remove();
+  toast('✅ Backend configurato! Ricaricamento...');
+  setTimeout(function(){ location.reload(); },1200);
 }
 
-// ══════════════════════
-// LIVE SESSIONS ADMIN
-// ══════════════════════
-async function loadLiveSessions(){
-  try {
-    const res = await api('GET','collections/live_sessions/records?sort=-scheduled_at&perPage=20');
-    return res.items;
-  } catch(e){ return []; }
+// ============================================================
+// MISC
+// ============================================================
+function toggleMobileNav(){
+  var mn=document.getElementById('mobileNav');
+  if(mn) mn.classList.toggle('open');
 }
-async function saveLiveSession(title, date, desc, courseId){
-  try {
-    await api('POST','collections/live_sessions/records',{
-      title, scheduled_at: date, description: desc,
-      course: courseId||null, is_live: false
-    });
-    toast('✅ Sessione live creata!','success');
-    cachedCourses = null;
-  } catch(e){ toast('⚠️ Errore creazione sessione','error'); }
-}
-async function toggleLiveStatus(id, current){
-  try {
-    await api('PATCH','collections/live_sessions/records/'+id,{is_live:!current});
-    toast(current ? '⏹️ Diretta terminata' : '🔴 Diretta avviata!', current?'info':'success');
-  } catch(e){ toast('Errore','error'); }
+function toggleSidebar(){
+  var sb=document.getElementById('sidebar');
+  if(sb) sb.classList.toggle('open');
 }
 
-// ══════════════════════
-// ADMIN LIVE PANEL (aggiunto in admin view)
-// ══════════════════════
-const origRenderAdmin = renderAdmin;
-window.renderAdmin = async function(){
-  await origRenderAdmin();
-  // Append live sessions panel if not already there
-  const adminContent = document.getElementById('admin-list');
-  if(adminContent && !document.getElementById('live-sessions-panel')){
-    const panel = document.createElement('div');
-    panel.id = 'live-sessions-panel';
-    panel.style = 'margin-top:28px;';
-    panel.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-        <div class="dash-section-title">🔴 Sessioni Live</div>
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('new-live-form').classList.toggle('hidden')">+ Nuova diretta</button>
-      </div>
-      <div id="new-live-form" class="hidden" style="background:#fff;border-radius:12px;padding:24px;box-shadow:var(--shadow);margin-bottom:16px;">
-        <div class="form-row">
-          <div class="form-group"><label>Titolo sessione</label><input type="text" class="form-control" id="live-title" placeholder="es. PLC Base — Lezione pratica"/></div>
-          <div class="form-group"><label>Data e ora</label><input type="datetime-local" class="form-control" id="live-date"/></div>
-        </div>
-        <div class="form-group"><label>Descrizione</label><textarea class="form-control" id="live-desc" rows="2" placeholder="Argomenti trattati..."></textarea></div>
-
-```
-    <button class="btn btn-primary btn-sm" onclick="createLiveSession()">💾 Crea sessione</button>
-  </div>
-  <div id="live-sessions-list"><div style="text-align:center;padding:20px;color:var(--muted);font-size:14px;">⏳ Caricamento...</div></div>`;
-adminContent.appendChild(panel);
-renderLiveSessionsList();
-```
-
-}
-};
-async function createLiveSession(){
-const title = document.getElementById(‘live-title’).value.trim();
-const date  = document.getElementById(‘live-date’).value;
-const desc  = document.getElementById(‘live-desc’).value.trim();
-if(!title||!date){ toast(‘Compila titolo e data’,‘warning’); return; }
-await saveLiveSession(title, date, desc, null);
-document.getElementById(‘live-title’).value=’’;
-document.getElementById(‘live-date’).value=’’;
-document.getElementById(‘live-desc’).value=’’;
-document.getElementById(‘new-live-form’).classList.add(‘hidden’);
-renderLiveSessionsList();
-}
-async function renderLiveSessionsList(){
-const list = document.getElementById(‘live-sessions-list’);
-if(!list) return;
-const sessions = await loadLiveSessions();
-if(!sessions.length){
-list.innerHTML=’<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px;">Nessuna sessione live programmata</div>’;
-return;
-}
-list.innerHTML = `<div class="admin-table"><table><thead><tr>
-<th>Titolo</th><th>Data</th><th>Stato</th><th>Azioni</th>
-
-  </tr></thead><tbody>${sessions.map(s=>`<tr>
-    <td style="font-weight:600;">${s.title}</td>
-    <td>${new Date(s.scheduled_at).toLocaleString('it-IT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-    <td><span class="badge ${s.is_live?'badge-red':'badge-blue'}">${s.is_live?'🔴 IN DIRETTA':'Programmata'}</span></td>
-    <td><div style="display:flex;gap:8px;">
-      <button class="btn ${s.is_live?'btn-danger':'btn-primary'} btn-sm" onclick="toggleLiveStatus('${s.id}',${s.is_live}).then(renderLiveSessionsList)">${s.is_live?'⏹️ Termina':'🔴 Avvia'}</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteLiveSession('${s.id}')">🗑️</button>
-    </div></td>
-  </tr>`).join('')}</tbody></table></div>`;
-}
-async function deleteLiveSession(id){
-  if(!confirm('Eliminare questa sessione?')) return;
-  try { await api('DELETE','collections/live_sessions/records/'+id); toast('Sessione eliminata','info'); renderLiveSessionsList(); } catch(e){ toast('Errore','error'); }
-}
-
-// ══════════════════════
-// KEYBOARD SHORTCUTS
-// ══════════════════════
-document.addEventListener(‘keydown’, e=>{
-if(e.key===‘Escape’){
-closeModal();
-document.getElementById(‘config-modal’)?.remove();
-document.getElementById(‘sidebar’)?.classList.remove(‘open’);
-}
-// Ctrl+Enter to send chat
-if((e.ctrlKey||e.metaKey) && e.key===‘Enter’){
-const chatInput = document.getElementById(‘chatInput’);
-if(document.activeElement===chatInput) sendChat();
-}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    closeModal();
+    var cm=document.getElementById('config-modal'); if(cm) cm.remove();
+    var sb=document.getElementById('sidebar'); if(sb) sb.classList.remove('open');
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){
+    var ci=document.getElementById('chatInput');
+    if(document.activeElement===ci) sendChat();
+  }
 });
 
-// ══════════════════════
-// STYLE INJECTION
-// ══════════════════════
-const extraStyle = document.createElement(‘style’);
-extraStyle.textContent = `@keyframes slideInToast { from { opacity:0; transform:translateX(30px); } to   { opacity:1; transform:translateX(0); } } #pb-url-input:focus { border-color:var(--primary)!important; box-shadow:0 0 0 4px rgba(0,96,204,.1); } .nav-links { gap:28px; } .stat-card { transition:transform .2s,box-shadow .2s; } .stat-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); } .course-card .cc-icon { transition:transform .3s; } .course-card:hover .cc-icon { transform:scale(1.15) rotate(-5deg); }`;
-document.head.appendChild(extraStyle);
-
-// ══════════════════════
-// INIT
-// ══════════════════════
-// Check backend connection on load
-checkConnection();
-// Recheck every 30s
-setInterval(checkConnection, 30000);
-
-// NAV scroll effect
-window.addEventListener(‘scroll’,()=>{
-document.getElementById(‘mainNav’)?.classList.toggle(‘scrolled’, window.scrollY>20);
+window.addEventListener('scroll',function(){
+  var nav=document.getElementById('mainNav');
+  if(nav) nav.classList.toggle('scrolled',window.scrollY>20);
 });
 
-// Close modal on overlay click
-document.getElementById(‘authModal’)?.addEventListener(‘click’,function(e){
-if(e.target===this) closeModal();
+document.getElementById('authModal').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
 });
+
+// Init landing reviews on load
+renderLandingReviews();
 </script>
 
 </body>
-</html>
+</html>mi
