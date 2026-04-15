@@ -2303,6 +2303,7 @@ function doLogout(){
   CU=null;PT=null;CC=null;localStorage.removeItem('pva_token');localStorage.removeItem('pva_user');
   if(chatPoll){clearInterval(chatPoll);chatPoll=null;}
   if(livePollingInterval){clearInterval(livePollingInterval);livePollingInterval=null;}
+  var nav=document.getElementById('mainNav');if(nav)nav.style.display='';
   var tb=document.getElementById('appTopBar');if(tb)tb.classList.remove('visible');
   var app=document.getElementById('page-app'),land=document.getElementById('page-landing'),sb=document.getElementById('sb');
   if(app)app.classList.add('hidden');if(land)land.classList.remove('hidden');if(sb)sb.classList.remove('open');
@@ -2318,6 +2319,7 @@ function doLogout(){
 function enterApp(){
   var land=document.getElementById('page-landing'),app=document.getElementById('page-app');
   if(land)land.classList.add('hidden');if(app)app.classList.remove('hidden');
+  var nav=document.getElementById('mainNav');if(nav)nav.style.display='none';
   var tb=document.getElementById('appTopBar');if(tb)tb.classList.add('visible');
   showBottomNav();
   var mhd=document.getElementById('appMobileHd');if(mhd)mhd.style.display='flex';
